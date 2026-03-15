@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+  <name>Persian Gulf Wargame -- All Scenarios (8 CSGs)</name>
+  <description>Eight-CSG simulation of Iranian mass-missile attacks on US Carrier Strike Groups.
+US TLAM/JASSM counterstrikes destroy Iranian launch sites after 25 hits each.
+
+Toggle scenarios with the folder checkboxes.
+Use the Google Earth timeline slider to animate missile flights, intercepts, and impacts.
+Each munition type has a distinct color; breakthrough tracks are brighter/thicker.
+Amber/cyan-green arcs = US outbound TLAM/JASSM strikes; sites go gray when destroyed.
+
+8 Carrier Strike Groups:
+  USS Abraham Lincoln (CVN-72) | USS Gerald R. Ford (CVN-78) | USS George H.W. Bush (CVN-77)
+  CSG Alpha (Arabian Sea) | CSG Bravo (N. Gulf) | CSG Charlie (C. Gulf)
+  CSG Delta (S. Gulf) | CSG Echo (Hormuz approaches)
+
+Armament estimates (unclassified, open-source):
+  SM-6 per CSG: 24–66 rds (240 km)  |  SM-2: 60–203 rds (167 km)
+  ESSM: 96–160 rds (50 km)           |  RAM: 42–105 rds (15 km)
+  TLAM strike capacity: 48–128 rds per CSG
+  Sources: CRS RL33199; IISS Military Balance 2024; influenceofhistory.blogspot.com
+
+── Simultaneous launch (A–F) ──────────────────────────────────────────────────
+Scenario A -- Low:       2,130 total   69% kill    ~665 breakthrough  US fires 160 strikes
+Scenario B -- Medium:    4,400 total   65% kill  ~1,562 breakthrough  US fires 240 strikes
+Scenario C -- High:      8,060 total   CAP HIT   ~4,060 breakthrough  US fires 320 strikes
+Scenario D -- Realistic: 3,870 total   63% kill  ~1,417 breakthrough  US fires 240 strikes
+Scenario E -- Iran Best: 10,800 total  CAP HIT   ~6,800 breakthrough  US fires 320 strikes
+Scenario F -- USA Best:   1,330 total  93% kill      ~90 breakthrough  US fires 480 strikes  (all 12 sites destroyed)
+── Phased launch: drones first (hr 0–1), then missiles (hr 1–2) ───────────────
+Scenario G -- Drone-First Low:    2,130 total  65% kill    ~745 breakthrough  (+80 vs A)
+Scenario H -- Drone-First Medium: 4,400 total  60% kill  ~1,760 breakthrough  (+198 vs B)
+Scenario I -- Drone-First High:   8,060 total  46% kill  ~4,352 breakthrough  (+290 vs C, CIWS exhausted)
+
+Global color legend (all scenarios):
+  Shahab-3 MRBM (amber-orange — legacy MRBM)
+  Noor ASCM (red — legacy anti-ship cruise, C-802 derivative)
+  Fateh-110 SRBM (amber — legacy SRBM)
+  Emad MRBM (red — maneuvering MRBM, advanced)
+  Zolfaghar SRBM (orange-red — precision SRBM)
+  Khalij Fars ASBM (crimson — anti-ship ballistic, EO/IR seeker)
+  CM-302 Supersonic ASCM (scarlet — Mach 3 anti-ship, most dangerous)
+  Fateh-313 SRBM (red-orange — advanced precision SRBM)
+  Shahed-136 Loitering Munition (yellow — cheap swarm drone)
+  IRGCN Sea Drone (amber-yellow — surface drone)
+  Fattah-1 HGV (magenta — hypersonic glide vehicle, near-uninterceptable)
+  TLAM Block IV (lime green — US cruise missile strike on land targets)
+  JASSM-ER (forest green — US stealth standoff strike on land targets)
+  US SM-6 interceptors = white | CIWS = lime green
+  Amber/cyan-green tracks = US TLAM/JASSM strikes outbound to Iran sites
+
+Simulation clock starts: 2026-03-13T06:00:00Z</description>
+
+  <NetworkLink><name>Scenario A -- Low Capability (8 CSGs)  [3279/4800 intercepted | 1521 breakthrough | ~1089 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_low.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario B -- Medium Capability (8 CSGs)  [3969/8250 intercepted | 4281 breakthrough | ~1120 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_medium.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario C -- High Capability / CAP HIT (8 CSGs)  [3728/7565 intercepted | 3837 breakthrough | ~1113 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_high.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario D -- Realistic: Simultaneous Detection-Launch (8 CSGs)  [3971/7250 intercepted | 3279 breakthrough | ~1062 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_realistic.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario E -- Best Case Iran / CAP HIT (8 CSGs)  [2478/6750 intercepted | 4272 breakthrough | ~1158 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_iran_best.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario F -- Best Case USA (8 CSGs)  [1540/1660 intercepted | 120 breakthrough | ~1094 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_usa_best.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario G -- Drone-First Low (Phased Assault)  [3618/5600 intercepted | 1982 breakthrough | ~1105 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_drone_first_low.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario H -- Drone-First Medium (Phased Assault)  [3975/8250 intercepted | 4275 breakthrough | ~1108 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_drone_first_medium.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario I -- Drone-First High Saturation (Phased Assault)  [3461/7565 intercepted | 4104 breakthrough | ~1134 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_drone_first_high.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario G -- US/IAF Coordinated First Strike (Perfect Timing)  [229/426 intercepted | 197 breakthrough | ~1041 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_coordinated_strike.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario H -- Iranian Focused Salvo (All Fire on CVN-78 Ford)  [3968/7250 intercepted | 3282 breakthrough | ~698 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_focused_salvo.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario I -- Hypersonic Threat (Fattah-1 HGV + Realistic Mix)  [3656/7250 intercepted | 3594 breakthrough | ~1123 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_hypersonic_threat.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario J -- Pure Ballistic Barrage (No Drones, SM-6 Undistracted)  [510/600 intercepted | 90 breakthrough | ~49 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_ballistic_barrage.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario K -- ASCM Swarm (1,000 Sea-Skimming Anti-Ship Missiles)  [550/1000 intercepted | 450 breakthrough | ~156 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_ascm_swarm.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario L -- Shore-Based Layered Defense (THAAD + PAC-3 + Aegis)  [5967/7250 intercepted | 1283 breakthrough | ~1108 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_shore_based_defense.kml</href></Link></NetworkLink>
+  <NetworkLink><name>Scenario M -- Strait of Hormuz Column Transit (Maximum Threat)  [3957/7250 intercepted | 3293 breakthrough | ~576 min]</name><visibility>0</visibility><Link><href>scenarios/scenario_strait_transit.kml</href></Link></NetworkLink>
+</Document>
+</kml>
