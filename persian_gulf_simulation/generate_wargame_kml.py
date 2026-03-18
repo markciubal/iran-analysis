@@ -202,6 +202,74 @@ def fmt_time(dt):
 def sim_time(offset_s):
     return SIM_START + timedelta(seconds=float(offset_s))
 
+# ============================================================
+# CSG SHIP FORMATION TEMPLATE  (10 ships per CSG)
+# ============================================================
+# ahead_km: + = forward in direction of travel, - = astern
+# abeam_km: + = starboard (right), - = port (left)
+# group: directional group — ships in the same group stop when any member is killed
+FORMATION_TEMPLATE = [
+    {"role": "CVN",  "ahead_km":  0.0, "abeam_km":  0.0,  "group": "center"},   # 0 carrier
+    {"role": "CG",   "ahead_km":  5.0, "abeam_km":  2.5,  "group": "ahead"},    # 1 cruiser fwd-stbd
+    {"role": "DDG",  "ahead_km": 10.0, "abeam_km":  0.0,  "group": "ahead"},    # 2 lead destroyer
+    {"role": "DDG",  "ahead_km":  3.0, "abeam_km": 10.0,  "group": "star"},     # 3 starboard close
+    {"role": "DDG",  "ahead_km":  3.0, "abeam_km":-10.0,  "group": "port"},     # 4 port close
+    {"role": "DDG",  "ahead_km":  0.0, "abeam_km": 16.0,  "group": "star"},     # 5 starboard far
+    {"role": "DDG",  "ahead_km":  0.0, "abeam_km":-16.0,  "group": "port"},     # 6 port far
+    {"role": "DDG",  "ahead_km": -6.0, "abeam_km":  8.0,  "group": "astern"},   # 7 rearguard stbd
+    {"role": "DDG",  "ahead_km": -6.0, "abeam_km": -8.0,  "group": "astern"},   # 8 rearguard port
+    {"role": "AOE",  "ahead_km":-15.0, "abeam_km":  0.0,  "group": "astern"},   # 9 supply ship
+]
+
+_SHIP_HIT_RADIUS_M = 20.0   # metres — impact must land within this radius to count as a ship hit
+
+
+def _box_muller_rng(rng):
+    """Box-Muller transform consuming exactly 2 rng.random() calls.
+    Returns (z0, z1) — two independent standard-normal samples."""
+    u1 = max(rng.random(), 1e-12)
+    u2 = rng.random()
+    r  = math.sqrt(-2.0 * math.log(u1))
+    th = 2.0 * math.pi * u2
+    return r * math.cos(th), r * math.sin(th)
+
+
+def ship_pos_at(csg, ship, t_s):
+    """Return (lon, lat) of an individual CSG ship at simulation time t_s seconds.
+
+    Ships maintain formation offsets relative to the carrier, rotated by the
+    CSG heading.  Uses a flat-earth approximation valid to < 0.1 % for ≤ 50 km offsets.
+    """
+    csg_lon, csg_lat = csg_pos_at(csg, t_s)
+    hdg = math.radians(csg.get("heading_deg", 0))
+    a, b = ship["ahead_km"], ship["abeam_km"]
+    # Rotate from ship-frame (ahead/abeam) to geographic (north/east)
+    n_km =  a * math.cos(hdg) - b * math.sin(hdg)
+    e_km =  a * math.sin(hdg) + b * math.cos(hdg)
+    lat_off = n_km / 111.0
+    lon_off = e_km / (111.0 * math.cos(math.radians(csg_lat)))
+    return csg_lon + lon_off, csg_lat + lat_off
+
+
+def generate_csg_ships(csg, rng):
+    """Generate 10 ships for a CSG with random formation jitter (±1.5 km each axis).
+    Returns a list of ship dicts."""
+    ships = []
+    for idx, tmpl in enumerate(FORMATION_TEMPLATE):
+        ja = rng.uniform(-1.5, 1.5)   # ahead jitter
+        jb = rng.uniform(-1.5, 1.5)   # abeam jitter
+        ships.append({
+            "id":       f"{csg['name']}_{idx}",
+            "idx":      idx,
+            "role":     tmpl["role"],
+            "ahead_km": tmpl["ahead_km"] + ja,
+            "abeam_km": tmpl["abeam_km"] + jb,
+            "group":    tmpl["group"],
+            "csg_name": csg["name"],
+        })
+    return ships
+
+
 def csg_pos_at(csg, t_s):
     """Return (lon, lat) of csg at t_s seconds using spherical dead-reckoning.
 
@@ -971,6 +1039,126 @@ MUNITION_SSPK = {
     "IRGCN Sea Drone":       {"interceptor": "CIWS / Mk38",     "sspk": 0.80, "notes": "Surface engagement mode; thin unarmored hull; Mk38 25mm primary; swarm saturation main risk"},
     "Fattah-1 HGV":          {"interceptor": "SM-6 (terminal)", "sspk": 0.05, "notes": "Mach 13-15 skip-glide; pitch-only maneuvering; ~2-5% Pk per SM-6 Block IA (radar track loss during glide phase)"},
     "Fattah-2 HGV":          {"interceptor": "SM-6 (terminal)", "sspk": 0.03, "notes": "Mach 10-15 (claimed 15, assessed 10-12); pitch+yaw maneuvering; SM-6 cannot solve impact-point prediction; ~3% Pk est. (Hudson Institute 2026)"},
+}
+
+# ============================================================
+# CIRCULAR ERROR PROBABLE PER MUNITION (metres)
+# ============================================================
+# CEP = radius within which 50% of impacts land.
+# Used to determine whether a breakthrough missile lands within 20 m of a ship.
+# Sources: CSIS Missile Threat; Jane's DW 2024; open-source performance estimates.
+MUNITION_CEP_M = {
+    "Shahab-3 MRBM":          500,   # legacy guidance; unguided RV; wide dispersion
+    "Noor ASCM":               10,   # active radar homing terminal; C-802 derivative
+    "Fateh-110 SRBM":          50,   # GPS-guided; solid-fuel SRBM
+    "Emad MRBM":               30,   # MaRV terminal maneuver; GPS+INS
+    "Zolfaghar SRBM":          10,   # precision GPS/INS; PAC-3 defeat documented
+    "Khalij Fars ASBM":         5,   # EO/IR seeker; purpose-built ship-hunter
+    "CM-302 Supersonic ASCM":   5,   # active radar terminal; Mach 3 approach
+    "Fateh-313 SRBM":          30,   # advanced precision SRBM; GPS/INS
+    "Shahed-136":              30,   # GPS terminal; loitering munition
+    "Shahed-238":              20,   # EO/IR terminal; jet-powered variant
+    "IRGCN Sea Drone":          3,   # surface radar lock; essentially a ram
+    "Fattah-1 HGV":           100,   # limited guidance at Mach 13; pitch-only
+    "Fattah-2 HGV":            75,   # slightly better; pitch+yaw but still HGV
+}
+
+# ─── Per-weapon-tier single-shot Pk  ──────────────────────────────────────────
+# Calibrated so that the optimal tier reproduces MUNITION_SSPK values; fallback
+# tiers are progressively degraded.  Weapons not listed default to 0.0 (no Pk).
+ENGAGEMENT_PK = {
+    # SM-6 Block IA — ≤240 km; best vs. ballistic mid-course
+    "SM-6": {
+        "Shahab-3 MRBM":          0.65,
+        "Fateh-110 SRBM":         0.65, "Fateh-313 SRBM":         0.60,
+        "Emad MRBM":              0.45, "Zolfaghar SRBM":          0.50,
+        "Khalij Fars ASBM":       0.60, "CM-302 Supersonic ASCM":  0.55,
+        "Noor ASCM":              0.70, "Shahed-136":              0.25,
+        "Shahed-238":             0.25, "IRGCN Sea Drone":         0.10,
+        "Fattah-1 HGV":           0.05, "Fattah-2 HGV":            0.03,
+    },
+    # SM-2 Block IIIB — ≤167 km; good vs. cruise; weaker vs. ballistic
+    "SM-2": {
+        "Shahab-3 MRBM":          0.50, "Fateh-110 SRBM":          0.50,
+        "Fateh-313 SRBM":         0.45, "Emad MRBM":               0.30,
+        "Zolfaghar SRBM":         0.38, "Khalij Fars ASBM":        0.45,
+        "CM-302 Supersonic ASCM": 0.42, "Noor ASCM":               0.65,
+        "Shahed-136":             0.22, "Shahed-238":              0.22,
+        "IRGCN Sea Drone":        0.05, "Fattah-1 HGV":            0.02,
+        "Fattah-2 HGV":           0.01,
+    },
+    # ESSM Block 2 — ≤50 km; primary vs. sea-skimmers
+    "ESSM": {
+        "Shahab-3 MRBM":          0.18, "Fateh-110 SRBM":          0.22,
+        "Fateh-313 SRBM":         0.22, "Emad MRBM":               0.12,
+        "Zolfaghar SRBM":         0.15, "Khalij Fars ASBM":        0.28,
+        "CM-302 Supersonic ASCM": 0.45, "Noor ASCM":               0.80,
+        "Shahed-136":             0.65, "Shahed-238":              0.58,
+        "IRGCN Sea Drone":        0.18, "Fattah-1 HGV":            0.01,
+        "Fattah-2 HGV":           0.01,
+    },
+    # RAM Block 2 — ≤15 km; optimised for drones + close-in sea-skimmers
+    "RAM": {
+        "Shahab-3 MRBM":          0.04, "Fateh-110 SRBM":          0.06,
+        "Fateh-313 SRBM":         0.06, "Emad MRBM":               0.03,
+        "Zolfaghar SRBM":         0.04, "Khalij Fars ASBM":        0.12,
+        "CM-302 Supersonic ASCM": 0.32, "Noor ASCM":               0.85,
+        "Shahed-136":             0.90, "Shahed-238":              0.82,
+        "IRGCN Sea Drone":        0.28, "Fattah-1 HGV":            0.01,
+        "Fattah-2 HGV":           0.01,
+    },
+    # CIWS (Phalanx) — ≤2 km; last-resort point defence
+    "CIWS": {
+        "Shahab-3 MRBM":          0.08, "Fateh-110 SRBM":          0.12,
+        "Fateh-313 SRBM":         0.12, "Emad MRBM":               0.06,
+        "Zolfaghar SRBM":         0.08, "Khalij Fars ASBM":        0.18,
+        "CM-302 Supersonic ASCM": 0.22, "Noor ASCM":               0.48,
+        "Shahed-136":             0.65, "Shahed-238":              0.52,
+        "IRGCN Sea Drone":        0.60, "Fattah-1 HGV":            0.01,
+        "Fattah-2 HGV":           0.01,
+    },
+    # Naval Gun (Mk38 / Mk45) — ≤5 km surface engagement
+    "NAVAL_GUN": {
+        "IRGCN Sea Drone":        0.80, "Shahed-136":              0.28,
+        "Shahed-238":             0.20, "Noor ASCM":               0.10,
+        "CM-302 Supersonic ASCM": 0.05,
+    },
+}
+
+# ── Shots-per-engagement doctrine  ────────────────────────────────────────────
+# Ballistic missiles and supersonic ASCMs warrant 2-round engagements per
+# US Navy Shoot-Look-Shoot (SLS) doctrine (OPNAVINST 3500.39; CSBA 2015).
+# Expected rounds consumed: 2 regardless of outcome (simultaneous salvo mode).
+# Cruise missiles, drones, and sea drones: 1 round (adequate time to assess).
+_SHOTS_PER_ENGAGEMENT = {
+    "Shahab-3 MRBM":          2,
+    "Fateh-110 SRBM":         2,
+    "Emad MRBM":              2,
+    "Zolfaghar SRBM":         2,
+    "Khalij Fars ASBM":       2,
+    "CM-302 Supersonic ASCM": 2,
+    "Fateh-313 SRBM":         2,
+    "Fattah-1 HGV":           2,
+    "Fattah-2 HGV":           2,
+}
+
+# ── Per-role casualty and damage scale factors ────────────────────────────────
+# A hit on a CVN produces more casualties (larger crew density in targeted areas)
+# and structural damage than a hit on a DDG.  These multipliers adjust the
+# munition's baseline kia_per_hit / damage_per_hit which are calibrated to a DDG.
+# Sources: NWP 3-20.6 damage assessment guidance; Sinking of HMS Sheffield /
+# USS Stark/Cole historical analysis; NSWC Dahlgren ship survivability models.
+_SHIP_ROLE_KIA_SCALE = {
+    "CVN":  2.5,   # 5,000+ crew; damage control teams large but more people at risk
+    "CG":   0.9,   # ~400 crew; slightly fewer than DDG
+    "DDG":  1.0,   # baseline ~280 crew
+    "AOE":  0.6,   # ~600 crew but non-combat role; lower blast exposure
+}
+_SHIP_ROLE_DAMAGE_SCALE = {
+    "CVN":  3.5,   # $11B hull; electronics-dense; any hit = massive repair cost
+    "CG":   1.1,   # $1.8B hull; slightly more capable than DDG
+    "DDG":  1.0,   # baseline $2.2B hull
+    "AOE":  0.4,   # logistics ship; lower combat asset value per hit
 }
 
 # ============================================================
@@ -2373,6 +2561,38 @@ def lerp(a, b, t):
     return a + t * (b - a)
 
 
+def cep_circle_kml(lon, lat, radius_m, color_kml, name, begin_s, end_s, n_pts=36):
+    """KML Polygon approximating the CEP uncertainty circle for a ballistic missile in flight.
+
+    Visible from begin_s (launch) to end_s (impact or intercept) via TimeSpan.
+    color_kml: AABBGGRR string.  radius_m: CEP radius in metres.
+    """
+    bbggrr        = color_kml[-6:] if len(color_kml) >= 6 else "ffffff"
+    fill_color    = f"33{bbggrr}"   # ~20% opacity fill
+    outline_color = f"cc{bbggrr}"   # 80% opacity outline
+    lat_per_m = 1.0 / 111_000.0
+    lon_per_m = 1.0 / (111_000.0 * math.cos(math.radians(lat)))
+    coords = []
+    for k in range(n_pts + 1):
+        angle  = 2.0 * math.pi * k / n_pts
+        coords.append(f"{lon + radius_m * math.sin(angle) * lon_per_m:.6f},"
+                       f"{lat + radius_m * math.cos(angle) * lat_per_m:.6f},0")
+    timespan = (f"<TimeSpan><begin>{fmt_time(sim_time(begin_s))}</begin>"
+                f"<end>{fmt_time(sim_time(end_s))}</end></TimeSpan>")
+    return (
+        f'      <Placemark><name>{name}</name>\n'
+        f'        {timespan}\n'
+        f'        <Style>\n'
+        f'          <LineStyle><color>{outline_color}</color><width>1</width></LineStyle>\n'
+        f'          <PolyStyle><color>{fill_color}</color><fill>1</fill><outline>1</outline></PolyStyle>\n'
+        f'        </Style>\n'
+        f'        <Polygon><altitudeMode>clampToGround</altitudeMode>'
+        f'<outerBoundaryIs><LinearRing><coordinates>{" ".join(coords)}</coordinates>'
+        f'</LinearRing></outerBoundaryIs></Polygon>\n'
+        f'      </Placemark>\n'
+    )
+
+
 def arc_points(lon1, lat1, lon2, lat2, peak_alt_m, n, sea_skim):
     """
     Return n+1 (lon, lat, alt_m) waypoints along the trajectory.
@@ -2565,8 +2785,8 @@ def kml_styles():
         icon_scale       = _DRONE_SCALES.get(munition_name, 1.0)
         icon_block_normal       = icon_block(ICON_MUNITION, munition_config["color"],    icon_scale)
         icon_block_breakthrough = icon_block(ICON_MUNITION, munition_config["color_bt"], min(icon_scale * 1.15, 2.0))
-        icon_block_normal_lbl   = icon_block(ICON_MUNITION, munition_config["color"],    icon_scale,              label_scale=0.4)
-        icon_block_bt_lbl       = icon_block(ICON_MUNITION, munition_config["color_bt"], min(icon_scale * 1.15, 2.0), label_scale=0.4)
+        icon_block_normal_lbl   = icon_block(ICON_MUNITION, munition_config["color"],    icon_scale,              label_scale=0.6)
+        icon_block_bt_lbl       = icon_block(ICON_MUNITION, munition_config["color_bt"], min(icon_scale * 1.15, 2.0), label_scale=0.6)
         parts.append(f"""
   <Style id="{style_id}">
     {icon_block_normal}
@@ -2593,7 +2813,7 @@ def kml_styles():
     <LineStyle><color>ff0080ff</color><width>3</width></LineStyle>
   </Style>
   <Style id="shahed_ai_approach_labeled">
-    {icon_block(ICON_MUNITION, "ff0080ff", 1.1, label_scale=0.4)}
+    {icon_block(ICON_MUNITION, "ff0080ff", 1.1, label_scale=0.6)}
     <LineStyle><color>ff0080ff</color><width>3</width></LineStyle>
   </Style>""")
 
@@ -2604,7 +2824,7 @@ def kml_styles():
     <LineStyle><color>ff00a0ff</color><width>4</width></LineStyle>
   </Style>
   <Style id="shahed_ai_terminal_labeled">
-    {icon_block(ICON_MUNITION, "ff00a0ff", 1.1, label_scale=0.4)}
+    {icon_block(ICON_MUNITION, "ff00a0ff", 1.1, label_scale=0.6)}
     <LineStyle><color>ff00a0ff</color><width>4</width></LineStyle>
   </Style>""")
 
@@ -2616,7 +2836,7 @@ def kml_styles():
     <LineStyle><color>ff0044ff</color><width>4</width></LineStyle>
   </Style>
   <Style id="irgcn_lock_terminal_labeled">
-    {icon_block(ICON_MUNITION, "ff0044ff", 1.1, label_scale=0.4)}
+    {icon_block(ICON_MUNITION, "ff0044ff", 1.1, label_scale=0.6)}
     <LineStyle><color>ff0044ff</color><width>4</width></LineStyle>
   </Style>""")
 
@@ -2624,7 +2844,7 @@ def kml_styles():
     for iaf_munition_name, iaf_munition_config in IAF_MUNITIONS.items():
         style_id          = safe_id(iaf_munition_name) + "_iaf"
         icon_block_normal = icon_block(ICON_MUNITION, iaf_munition_config["color"], 0.9)
-        icon_block_lbl    = icon_block(ICON_MUNITION, iaf_munition_config["color"], 0.9, label_scale=0.4)
+        icon_block_lbl    = icon_block(ICON_MUNITION, iaf_munition_config["color"], 0.9, label_scale=0.6)
         parts.append(f"""
   <Style id="{style_id}">
     {icon_block_normal}
@@ -2848,6 +3068,39 @@ def kml_styles():
             f'</Style>'
         )
 
+    # ── Individual ship styles ────────────────────────────────────────────────
+    _SHIP_ICON = "http://maps.google.com/mapfiles/kml/shapes/sailing.png"
+    _SHIP_ICON_X = "http://maps.google.com/mapfiles/kml/shapes/placemark_square.png"
+    for _role, _scale, _color in [
+        ("cvn",  0.60, "ffffffff"),   # carrier — full white
+        ("cg",   0.40, "ffddddff"),   # cruiser — light blue-white
+        ("ddg",  0.35, "ffaaccff"),   # destroyer — blue-tinted
+        ("aoe",  0.30, "ff88aaaa"),   # supply ship — grey-teal
+    ]:
+        parts.append(
+            f'<Style id="ship_{_role}">'
+            f'<IconStyle><color>{_color}</color><scale>{_scale}</scale>'
+            f'<Icon><href>{_SHIP_ICON}</href></Icon></IconStyle>'
+            f'<LabelStyle><scale>0</scale></LabelStyle>'
+            f'</Style>'
+        )
+    # Destroyed ship — small dark red X square
+    parts.append(
+        f'<Style id="ship_destroyed">'
+        f'<IconStyle><color>ff2222cc</color><scale>0.45</scale>'
+        f'<Icon><href>{_SHIP_ICON_X}</href></Icon></IconStyle>'
+        f'<LabelStyle><scale>0</scale></LabelStyle>'
+        f'</Style>'
+    )
+    # Group-stopped ship — grey (same icon, greyed out)
+    parts.append(
+        f'<Style id="ship_stopped">'
+        f'<IconStyle><color>ff888888</color><scale>0.32</scale>'
+        f'<Icon><href>{_SHIP_ICON}</href></Icon></IconStyle>'
+        f'<LabelStyle><scale>0</scale></LabelStyle>'
+        f'</Style>'
+    )
+
     _raw = "\n".join(parts)
     # Inject black BalloonStyle into every Style block so all popups are fully black
     return _raw.replace("</Style>", f"{_BB}</Style>")
@@ -2963,6 +3216,70 @@ def _animated_wez_ring(csg, radius_km, style_active, style_degraded,
         )
         t = t_next
     return "".join(out)
+
+
+def gen_csg_ship_kml(csg, ships, ship_destroyed_at, group_stopped_at, asset_end_s):
+    """
+    Generate KML for the 10 individual ships of a CSG.
+
+    Each ship is rendered as a gx:Track showing movement from T=0 until the ship
+    either (a) is directly destroyed by a 20 m-radius hit, or (b) belongs to a
+    directional group whose lead ship was killed and the group halted, or (c) the
+    scenario ends.  A red kill-marker Placemark is added at the destruction point.
+    """
+    parts = []
+    for ship in ships:
+        sid   = ship["id"]
+        role  = ship["role"].lower()
+
+        # Determine when this ship stops moving
+        destroy_t   = ship_destroyed_at.get(sid)
+        gkey        = (csg["name"], ship["group"])
+        grp_stop_t  = group_stopped_at.get(gkey)
+
+        if destroy_t is not None:
+            stop_t     = destroy_t
+            style_id   = "ship_destroyed"
+        elif grp_stop_t is not None:
+            stop_t     = grp_stop_t
+            style_id   = "ship_stopped"
+        else:
+            stop_t     = asset_end_s
+            style_id   = f"ship_{role}"
+
+        lon0, lat0 = ship_pos_at(csg, ship, 0.0)
+        lon1, lat1 = ship_pos_at(csg, ship, stop_t)
+        t0 = fmt_time(sim_time(0.0))
+        t1 = fmt_time(sim_time(stop_t))
+
+        name_lbl = f"{ship['role']} ({csg['name'][:15]})"
+        parts.append(
+            f'  <Placemark>\n'
+            f'    <name>{name_lbl}</name>\n'
+            f'    <styleUrl>#{style_id}</styleUrl>\n'
+            f'    <gx:Track>\n'
+            f'      <altitudeMode>clampToGround</altitudeMode>\n'
+            f'      <when>{t0}</when><when>{t1}</when>\n'
+            f'      <gx:coord>{lon0:.6f} {lat0:.6f} 0</gx:coord>'
+            f'<gx:coord>{lon1:.6f} {lat1:.6f} 0</gx:coord>\n'
+            f'    </gx:Track>\n'
+            f'  </Placemark>'
+        )
+
+        if destroy_t is not None:
+            klon, klat = ship_pos_at(csg, ship, destroy_t)
+            kt = fmt_time(sim_time(destroy_t))
+            parts.append(
+                f'  <Placemark>\n'
+                f'    <name>KILLED {ship["role"]} ({csg["name"][:12]})</name>\n'
+                f'    <styleUrl>#ship_destroyed</styleUrl>\n'
+                f'    <TimeStamp><when>{kt}</when></TimeStamp>\n'
+                f'    <Point><altitudeMode>clampToGround</altitudeMode>\n'
+                f'      <coordinates>{klon:.6f},{klat:.6f},0</coordinates>\n'
+                f'    </Point>\n'
+                f'  </Placemark>'
+            )
+    return "\n".join(parts)
 
 
 def gen_us_forces(first_hit_s=None, tenth_hit_s=None, latest_s=3600,
@@ -3469,7 +3786,7 @@ def gen_munition_labels(mnames, dur_s, strike_segs, iaf_segs, sm6_segs):
             f'      <IconStyle><scale>0</scale></IconStyle>\n'
             f'      <LabelStyle>'
             f'<color>{kml_color}</color>'
-            f'<scale>0.4</scale>'
+            f'<scale>0.6</scale>'
             f'</LabelStyle>\n'
             f'    </Style>\n'
             f'    <Point><altitudeMode>relativeToGround</altitudeMode>'
@@ -3842,7 +4159,76 @@ def gen_tour(tenth_hit_s, dur_s, sc_label, csg_fleet=None, hits_timeline=None):
     )
 
 
-def generate_scenario(scenario_key, seed=42):
+class CSGDefenseState:
+    """
+    Tracks per-CSG weapon magazine and resolves intercept attempts.
+
+    Magazine is drawn once at scenario start from each ship's low/high bounds,
+    giving organic inventory variation between runs.  Weapon tier is selected by
+    cascade (SM-6 → SM-2 → ESSM → RAM → CIWS) subject to range and inventory.
+    CIWS and Naval Gun are modelled as effectively unlimited (high-rate guns).
+    """
+
+    def __init__(self, csg, rng):
+        self.name  = csg["name"]
+        self.sm6   = rng.randint(csg["sm6_low"],  csg["sm6_high"])
+        self.sm2   = rng.randint(csg["sm2_low"],  csg["sm2_high"])
+        self.essm  = rng.randint(csg["essm_low"], csg["essm_high"])
+        self.ram   = rng.randint(csg["ram_low"],  csg["ram_high"])
+        # CIWS and Naval Gun have large capacity — modelled as unlimited
+        self.shots = {"SM-6": 0, "SM-2": 0, "ESSM": 0,
+                      "RAM": 0, "CIWS": 0, "NAVAL_GUN": 0}
+
+    def select_weapon(self, dist_km, forced_style=None):
+        """
+        Return (weapon_tier, kml_style_id, category_label) for this engagement,
+        or (None, None, None) if no weapon is available/in-range.
+        forced_style: "us_ciws" → drone family; "us_naval_gun" → surface vessel.
+        """
+        if forced_style == "us_naval_gun":
+            if dist_km <= 5.0:
+                return "NAVAL_GUN", "us_naval_gun", "Naval Gun / Phalanx"
+            if dist_km <= 15.0 and self.ram > 0:
+                return "RAM", "us_naval_gun", "Naval Gun / Phalanx"
+            return None, None, None
+
+        if forced_style == "us_ciws":
+            # Drone family: RAM primary, CIWS last-resort, ESSM close-range fallback
+            if dist_km <= 15.0 and self.ram > 0:
+                return "RAM", "us_ciws", "CIWS / SeaRAM"
+            if dist_km <= 2.0:
+                return "CIWS", "us_ciws", "CIWS / SeaRAM"
+            if dist_km <= 50.0 and self.essm > 0:
+                return "ESSM", "us_ciws", "CIWS / SeaRAM"
+            return None, None, None
+
+        # Standard cascade: SM-6 → SM-2 → ESSM → RAM → CIWS
+        if dist_km <= 240.0 and self.sm6 > 0:
+            return "SM-6",  "us_hi",  "SM-6 / SM-2"
+        if dist_km <= 167.0 and self.sm2 > 0:
+            return "SM-2",  "us_mid", "SM-6 / SM-2"
+        if dist_km <= 50.0  and self.essm > 0:
+            return "ESSM",  "us_lo",  "SM-6 / SM-2"
+        if dist_km <= 15.0  and self.ram > 0:
+            return "RAM",   "us_lo",  "SM-6 / SM-2"
+        if dist_km <= 2.0:
+            return "CIWS",  "us_lo",  "SM-6 / SM-2"
+        return None, None, None
+
+    def fire(self, weapon, shots=1):
+        """Decrement finite magazine and record shot count.
+        shots: rounds consumed this engagement (2 for ballistics/supersonic, 1 otherwise)."""
+        self.shots[weapon] = self.shots.get(weapon, 0) + shots
+        if   weapon == "SM-6":  self.sm6  = max(0, self.sm6  - shots)
+        elif weapon == "SM-2":  self.sm2  = max(0, self.sm2  - shots)
+        elif weapon == "ESSM":  self.essm = max(0, self.essm - shots)
+        elif weapon == "RAM":   self.ram  = max(0, self.ram  - shots)
+
+    def summary(self):
+        return {k: v for k, v in self.shots.items() if v > 0}
+
+
+def generate_scenario(scenario_key, seed=42, out_dir=None):
     """
     Generate a complete KML simulation for one named scenario.
 
@@ -3875,14 +4261,12 @@ def generate_scenario(scenario_key, seed=42):
     # Load the full scenario configuration dict for this key.
     scenario_config = SCENARIOS[scenario_key]
 
-    n_missiles    = scenario_config["n_missiles"]
-    # Hard upper bound on total VLS intercept rounds across all 8 CSGs.
-    intercept_cap_hard_limit = scenario_config["intercept_cap"]
-    munitions     = scenario_config["munitions"]
-    wave_s        = scenario_config["wave_s"]
-    n_arc         = scenario_config["n_arc"]
-    n_sm6         = scenario_config["n_sm6"]
-    csg_fleet     = scenario_config.get("csg_fleet", US_CSGS)
+    n_missiles      = scenario_config["n_missiles"]
+    munitions       = scenario_config["munitions"]
+    wave_s          = scenario_config["wave_s"]
+    n_arc           = scenario_config["n_arc"]
+    n_arc_intercept = scenario_config["n_sm6"]   # arc segments for interceptor track rendering
+    csg_fleet       = scenario_config.get("csg_fleet", US_CSGS)
 
     # Phased launch timing (defaults keep backward-compat for scenarios A–F)
     # Drones (Shahed-136, IRGCN Sea Drone) launch in phase 1; all others in phase 2.
@@ -3918,37 +4302,25 @@ def generate_scenario(scenario_key, seed=42):
         if len(merged) >= _sc_threshold:
             site_inactive_at[sname] = merged[_sc_threshold - 1]
 
-    # Determine how many missiles will be intercepted in total (scenario-level rate × cap).
-    # rng.sample pre-selects which missile indices (by position in the launch loop) will
-    # be killed — this preserves the full RNG sequence for downstream missile assignments.
-    n_intercepted  = min(round(n_missiles * scenario_config["intercept_rate"]), intercept_cap_hard_limit)
-    intercepted_set = set(rng.sample(range(n_missiles), n_intercepted))
+    # Initialise per-CSG magazine-aware defense states (hybrid Monte Carlo / ABM).
+    # Magazine draws are done here — before the Phase 1 launch loop — so that
+    # every ship starts the battle with its full organic inventory.
+    csg_states = {c["name"]: CSGDefenseState(c, rng) for c in csg_fleet}
 
-    # Map scenario key to the KML style ID for the US interceptor tracks.
-    # Lighter blue ("us_lo") = fewer intercepts / less intensity;
-    # darker navy ("us_hi") = high-intensity intercept environment.
-    us_style = {
-        "low": "us_lo", "medium": "us_mid", "high": "us_hi",
-        "realistic": "us_mid", "iran_best": "us_hi", "usa_best": "us_lo",
-        "drone_first_low": "us_lo", "drone_first_medium": "us_mid", "drone_first_high": "us_hi",
-        "coordinated_strike": "us_lo",
-        "focused_salvo": "us_mid", "hypersonic_threat": "us_mid",
-        "ballistic_barrage": "us_lo", "ascm_swarm": "us_lo", "shore_based_defense": "us_mid",
-        "strait_transit": "us_mid", "caves": "us_mid",
-        "depleted_drone_first": "us_lo",
-        "depleted_coastal": "us_lo",
-        "depleted_israel_split": "us_lo",
-        # US-wins scenarios: high intercept intensity (Aegis fully engaged)
-        "us_win_preemption":        "us_lo",    # small salvo — low-intensity intercept needed
-        "us_win_ew_dominance":      "us_mid",   # moderate intercept load after EW suppression
-        "us_win_allied_umbrella":   "us_hi",    # high intercept intensity — full fleet engaged
-        "us_win_c2_disrupted":      "us_hi",    # high intensity — large fragmented salvo
-        "us_win_arsenal_attrition": "us_mid",   # moderate — large but low-lethality salvo
-        # 1% probe scenario: tiny salvo — lightest possible intercept intensity
-        "one_percent_probe":        "us_lo",
-        # 1% probe + Fattah-2: small salvo but Fattah-2 HGVs require heavy SM-6 commitment
-        "one_percent_fatah2":       "us_mid",
-    }[scenario_key]
+    # Per-CSG Aegis simultaneous engagement cap: maximum SM-6/SM-2 guidance channels
+    # active at one time.  AN/SPY-1D(V) Baseline 9 IPDS: ~18 simultaneous engagements.
+    # Source: NAVSEA Aegis BMD 6.3 brief; Congressional testimony 2023.
+    _AEGIS_SIMUL_CAP = 18
+    _aegis_window_s  = 30.0   # engagement window: intercepts within 30 s overlap
+    # _csg_active_engagements[csg_name] = sorted list of (intercept_time_s,) for SM-6/SM-2 so far
+    _csg_active_eng  = {c["name"]: [] for c in csg_fleet}
+
+    # Generate 10-ship formations for each CSG (2 RNG calls per ship × 10 ships × 8 CSGs).
+    csg_ships        = {}
+    for c in csg_fleet:
+        csg_ships[c["name"]] = generate_csg_ships(c, rng)
+    ship_destroyed_at = {}   # ship_id → destruction time_s
+    group_stopped_at  = {}   # (csg_name, group_name) → stop time_s
 
     # focused_salvo: all Iranian fire directed at a single named CSG
     _focus_name   = scenario_config.get("focus_csg")
@@ -3959,6 +4331,7 @@ def generate_scenario(scenario_key, seed=42):
     missile_segs  = {mn: [] for mn in _mnames}
     intercept_pts = {mn: [] for mn in _mnames}
     impact_pts    = {mn: [] for mn in _mnames}
+    cep_circles   = {mn: [] for mn in _mnames}   # in-flight CEP polygons (ballistic only)
     sm6_segs      = {"SM-6 / SM-2": [], "CIWS / SeaRAM": [], "Naval Gun / Phalanx": []}
     latest_s      = 0.0
 
@@ -4038,11 +4411,12 @@ def generate_scenario(scenario_key, seed=42):
                 if _ai_roll < AI_SHAHED_FRACTION:
                     _ = rng.uniform(-0.05, 0.05)  # ai_tgt_lon (consumed even when diverted)
                     _ = rng.uniform(-0.05, 0.05)  # ai_tgt_lat
-                if i in intercepted_set:
-                    _lo, _hi = MUNITIONS["Shahed-136"].get("t_int_range", (0.70, 0.92))
-                    _ = rng.uniform(_lo, _hi)     # t_int_frac (uses real munition range)
-                    _rlo, _rhi = MUNITIONS["Shahed-136"].get("react_range", (60, 90))
-                    _ = rng.uniform(_rlo, _rhi)   # react_s
+                # Always consume intercept RNG slots to preserve downstream sequence
+                _lo, _hi = MUNITIONS["Shahed-136"].get("t_int_range", (0.70, 0.92))
+                _ = rng.uniform(_lo, _hi)       # t_int_frac slot
+                _rlo, _rhi = MUNITIONS["Shahed-136"].get("react_range", (60, 90))
+                _ = rng.uniform(_rlo, _rhi)     # react_s slot
+                _ = rng.random()                # Pk Bernoulli slot
                 events.append(None)
                 continue
 
@@ -4061,19 +4435,35 @@ def generate_scenario(scenario_key, seed=42):
             _ = rng.uniform(-0.25, 0.25)   # tgt_lat jitter
             _ = rng.uniform(0.88, 1.12)    # peak jitter
             _ = rng.random()               # AI roll
-            if i in intercepted_set:
-                _ = rng.random()           # t_int_frac
-                _ = rng.uniform(60, 90)    # react_s
+            # Always consume intercept RNG slots to preserve downstream sequence
+            _ = rng.random()               # t_int_frac slot
+            _ = rng.uniform(60, 90)        # react_s slot
+            _ = rng.random()               # Pk Bernoulli slot
             events.append(None)
             continue
 
         site    = rng.choice(active_pool)
-        # Project CSG position at estimated impact time (one-iteration lead-target)
+        # Lead-target: estimate impact time from site to CSG center
         _est_dist   = haversine_km(site["lon"], site["lat"], csg["lon"], csg["lat"])
         _est_impact = launch_s + _est_dist / mdef["speed_km_s"]
-        _clon, _clat = csg_pos_at(csg, _est_impact)
-        tgt_lon = _clon + rng.uniform(-0.25, 0.25)
-        tgt_lat = _clat + rng.uniform(-0.25, 0.25)
+
+        # Select a specific ship in the CSG as the aiming point (1 RNG call)
+        _active_ships = [s for s in csg_ships[csg["name"]]
+                         if s["id"] not in ship_destroyed_at]
+        if not _active_ships:
+            _active_ships = csg_ships[csg["name"]]
+        _tgt_ship   = rng.choice(_active_ships)
+        _ts_lon, _ts_lat = ship_pos_at(csg, _tgt_ship, _est_impact)
+
+        # Apply CEP scatter (Box-Muller — always exactly 2 rng.random() calls)
+        _cep_m  = MUNITION_CEP_M.get(mname, 200.0)
+        _sig_m  = _cep_m / (2.0 * math.sqrt(math.log(2.0)))
+        _z0, _z1 = _box_muller_rng(rng)
+        _sig_lat = _sig_m / 111_000.0
+        _sig_lon = _sig_m / (111_000.0 * math.cos(math.radians(_ts_lat)))
+        tgt_lon  = _ts_lon + _z0 * _sig_lon
+        tgt_lat  = _ts_lat + _z1 * _sig_lat
+
         dist_km  = haversine_km(site["lon"], site["lat"], tgt_lon, tgt_lat)
         flight_s = dist_km / mdef["speed_km_s"]
         peak     = mdef["peak_alt_m"] * rng.uniform(0.88, 1.12)
@@ -4091,19 +4481,72 @@ def generate_scenario(scenario_key, seed=42):
             ai_tgt_lon = tgt_lon
             ai_tgt_lat = tgt_lat
 
-        is_int = (i in intercepted_set) and not is_ai  # AI drones always break through
-        # Per-munition intercept probability override (e.g., Fattah-1 HGV ~5% P(k))
-        if "intercept_prob_override" in mdef:
-            is_int = rng.random() < mdef["intercept_prob_override"]
+        # ── Magazine-aware intercept resolution (hybrid Monte Carlo / ABM) ──────
+        # Three RNG slots always consumed (Pk trial, t_int_frac, react_s) so the
+        # downstream RNG sequence is deterministic regardless of intercept outcome.
+        # Pk is looked up from ENGAGEMENT_PK[weapon_tier][mname]; if no weapon is
+        # available or in-range, Pk = 0 and the munition always breaks through.
+        _forced       = mdef.get("interceptor_style")          # "us_ciws" / "us_naval_gun" / None
+        _state        = csg_states[csg["name"]]
+        weapon_tier, int_style_ev, interceptor_category_ev = \
+            _state.select_weapon(dist_km, _forced)
+        # ── Aegis simultaneous engagement saturation check ────────────────────
+        # SM-6 and SM-2 require a dedicated SPY-1D fire-control channel.
+        # Baseline 9 IPDS cap: ~18 concurrent engagements per CSG.
+        # If saturated, SM-6/SM-2 engagement is denied; ESSM/RAM/CIWS unaffected.
+        if weapon_tier in ("SM-6", "SM-2"):
+            _proj_int_s = launch_s + flight_s * 0.70
+            _active_now = sum(1 for t in _csg_active_eng[csg["name"]]
+                              if abs(t - _proj_int_s) <= _aegis_window_s)
+            if _active_now >= _AEGIS_SIMUL_CAP:
+                weapon_tier, int_style_ev, interceptor_category_ev = None, None, None
+            else:
+                _csg_active_eng[csg["name"]].append(_proj_int_s)
+        _sspk         = ENGAGEMENT_PK.get(weapon_tier, {}).get(mname, 0.0) if weapon_tier else 0.0
+        _eng_shots    = _SHOTS_PER_ENGAGEMENT.get(mname, 1)     # rounds per engagement (1 or 2)
+        # Two-shot engagement Pk: 1-(1-SSPK)^shots (simultaneous salvo doctrine for ballistics)
+        _pk           = 1.0 - (1.0 - _sspk) ** _eng_shots if _sspk > 0.0 else 0.0
+        _pk_roll      = rng.random()                            # Pk Bernoulli slot (always consumed)
+        lo, hi        = mdef.get("t_int_range",
+                                  (0.92, 0.99) if mdef["sea_skim"] else (0.55, 0.85))
+        t_int_frac    = rng.uniform(lo, hi)                     # t_int_frac slot (always consumed)
+        rlo, rhi      = mdef.get("react_range", (60, 90))
+        react_s       = rng.uniform(rlo, rhi)                   # react_s slot (always consumed)
+        is_int        = weapon_tier is not None and not is_ai and _pk_roll < _pk
         if is_int:
-            lo, hi   = mdef.get("t_int_range",
-                                 (0.70, 0.92) if mdef["sea_skim"] else (0.55, 0.85))
-            t_int_frac = rng.uniform(lo, hi)
-            rlo, rhi = mdef.get("react_range", (60, 90))
-            react_s  = rng.uniform(rlo, rhi)
+            _state.fire(weapon_tier, shots=_eng_shots)
+        elif weapon_tier is not None and not is_ai:
+            # Miss: rounds still expended (both fired regardless of outcome per SLS doctrine)
+            _state.fire(weapon_tier, shots=_eng_shots)
         else:
-            t_int_frac = None
-            react_s    = None
+            t_int_frac             = None
+            react_s                = None
+            weapon_tier            = None
+            int_style_ev           = None
+            interceptor_category_ev = None
+        # ── 20 m ship-hit proximity check ────────────────────────────────────
+        # Check whether the impact point falls within _SHIP_HIT_RADIUS_M of any
+        # ship in the target CSG at the computed impact time.  AI drones that
+        # break through are guaranteed hits (they lock onto a specific hull).
+        _impact_time_s = launch_s + flight_s
+        _hit_ship_id   = None
+        if not is_int:
+            if is_ai:
+                # AI Shahed has EO/IR terminal lock — guaranteed hit on nearest ship
+                _best_d = float("inf")
+                for _sh in csg_ships[csg["name"]]:
+                    _slon, _slat = ship_pos_at(csg, _sh, _impact_time_s)
+                    _dm = haversine_km(ai_tgt_lon, ai_tgt_lat, _slon, _slat) * 1000.0
+                    if _dm < _best_d:
+                        _best_d, _hit_ship_id = _dm, _sh["id"]
+            else:
+                for _sh in csg_ships[csg["name"]]:
+                    _slon, _slat = ship_pos_at(csg, _sh, _impact_time_s)
+                    _dm = haversine_km(tgt_lon, tgt_lat, _slon, _slat) * 1000.0
+                    if _dm <= _SHIP_HIT_RADIUS_M:
+                        _hit_ship_id = _sh["id"]
+                        break
+
         # Distance-based lock-on fraction: fraction of flight before sensor acquisition.
         # AI Shahed uses EO/IR camera; IRGCN uses surface search radar.
         # lock_frac = fraction of arc flown before lock-on (rest is guided terminal).
@@ -4126,11 +4569,35 @@ def generate_scenario(scenario_key, seed=42):
             "is_int": is_int, "t_int_frac": t_int_frac, "react_s": react_s,
             "is_ai": is_ai, "ai_tgt_lon": ai_tgt_lon, "ai_tgt_lat": ai_tgt_lat,
             "lock_frac": lock_frac,
+            "int_style_ev": int_style_ev,
+            "interceptor_category_ev": interceptor_category_ev,
+            "hit_ship_id": _hit_ship_id,
+            "impact_time_s": _impact_time_s,
         })
 
     # Remove suppressed (None) entries
     events = [e for e in events if e is not None]
     actual_launched = len(events)
+
+    # ── Resolve ship destruction in impact-time order ─────────────────────────
+    # Process breakthrough hits chronologically so earlier impacts drive group-stop
+    # before later missiles select their target ship.
+    _hit_events = sorted(
+        [e for e in events if not e["is_int"] and e.get("hit_ship_id")],
+        key=lambda e: e["impact_time_s"]
+    )
+    for _hev in _hit_events:
+        _hsid = _hev["hit_ship_id"]
+        if _hsid not in ship_destroyed_at:
+            ship_destroyed_at[_hsid] = _hev["impact_time_s"]
+            # Stop all ships in the same directional group
+            _cn = _hev["csg"]["name"]
+            for _sh in csg_ships[_cn]:
+                if _sh["id"] == _hsid:
+                    _gkey = (_cn, _sh["group"])
+                    if _gkey not in group_stopped_at:
+                        group_stopped_at[_gkey] = _hev["impact_time_s"]
+                    break
 
     # ================================================================
     # PHASE 2 — Build per-CSG sorted hit timeline
@@ -4144,7 +4611,9 @@ def generate_scenario(scenario_key, seed=42):
     # ================================================================
     hits_timeline = {c["name"]: [] for c in csg_fleet}
     for ev in events:
-        if not ev["is_int"]:   # both normal BT and AI-guided drones count as hits
+        # Only effective hits (landed within 20 m of a ship hull) count toward
+        # neutralisation.  AI-guided Shahed drones are always hull-hits.
+        if not ev["is_int"] and ev.get("hit_ship_id"):
             hits_timeline[ev["csg"]["name"]].append(ev["launch_s"] + ev["flight_s"])
     for name in hits_timeline:
         hits_timeline[name].sort()
@@ -4174,8 +4643,8 @@ def generate_scenario(scenario_key, seed=42):
         mname    = ev["mname"]
         mdef     = ev["mdef"]
         site     = ev["site"]
-        # Label every 4th munition (25%) at scale 0.4 with munition color; others unlabelled.
-        _lbl = "_labeled" if (i % 4 == 0) else ""
+        # Label ~15% of munitions (every 7th) at scale 0.6 with munition color; others unlabelled.
+        _lbl = "_labeled" if (i % 7 == 0) else ""
         # All munitions use relativeToGround so altitude tracks terrain elevation.
         _alt_mode = "relativeToGround"
         csg      = ev["csg"]
@@ -4213,16 +4682,14 @@ def generate_scenario(scenario_key, seed=42):
             # Only generate an interceptor track if the CSG is still combat-capable at fire time.
             csg_still_active_at_fire_time = (csg_neutralized_time_s is None or interceptor_fire_time_s < csg_neutralized_time_s)
 
-            int_style  = mdef.get("interceptor_style", us_style)
+            int_style  = ev["int_style_ev"]
             # Distinguish the three interceptor categories for separate KML styling.
             interceptor_is_ciws    = (int_style == "us_ciws")
             interceptor_is_naval_gun = (int_style == "us_naval_gun")
             # Peak altitude of the interceptor arc: CIWS engages close-in at low altitude;
             # SM-6/SM-2 arc rises much higher to meet the threat at mid-course.
             interceptor_arc_peak_altitude_m = max(int_alt * 1.1, 50) if interceptor_is_ciws else max(int_alt * 1.15, 8_000)
-            interceptor_category    = ("CIWS / SeaRAM" if interceptor_is_ciws
-                          else "Naval Gun / Phalanx" if interceptor_is_naval_gun
-                          else "SM-6 / SM-2")
+            interceptor_category = ev["interceptor_category_ev"]
 
             # Convert KML AABBGGRR hex color to CSS #RRGGBB for HTML popup styling.
             munition_css_color = _kml_to_css(mdef["color"])
@@ -4241,11 +4708,19 @@ def generate_scenario(scenario_key, seed=42):
                 safe_id(mname) + _lbl, visible_arc_points, arc_timestamps, f"{mname} #{i}", desc,
                 altitude_mode=_alt_mode)
 
+            # CEP circle: labeled (~15%) ballistic missiles only (non-sea-skim)
+            if _lbl and not mdef["sea_skim"]:
+                _cep_r = MUNITION_CEP_M.get(mname, 0)
+                if _cep_r > 0:
+                    cep_circles[mname].append(cep_circle_kml(
+                        tgt_lon, tgt_lat, _cep_r, mdef["color"],
+                        f"CEP {mname} #{i} ({_cep_r:.0f} m)", launch_s, intercept_time_s))
+
             if csg_still_active_at_fire_time:
                 _fire_lon, _fire_lat = csg_pos_at(csg, interceptor_fire_time_s)
                 sm6_pts   = arc_points(_fire_lon, _fire_lat, int_lon, int_lat,
-                                       interceptor_arc_peak_altitude_m, n_sm6, False)
-                sm6_t_pts = [interceptor_fire_time_s + (k / n_sm6) * react_s for k in range(n_sm6 + 1)]
+                                       interceptor_arc_peak_altitude_m, n_arc_intercept, False)
+                sm6_t_pts = [interceptor_fire_time_s + (k / n_arc_intercept) * react_s for k in range(n_arc_intercept + 1)]
                 sm6_segs[interceptor_category] += gx_track(
                     int_style, sm6_pts, sm6_t_pts,
                     f"{'CIWS' if interceptor_is_ciws else 'Gun' if interceptor_is_naval_gun else 'SM-6'} #{i}")
@@ -4466,6 +4941,14 @@ def generate_scenario(scenario_key, seed=42):
                     safe_id(mname) + "_bt" + _lbl, pts, t_pts,
                     f"{mname} #{i} [BT]", desc, altitude_mode=_alt_mode)
 
+                # CEP circle: labeled (~15%) ballistic breakthrough missiles only
+                if _lbl and not mdef["sea_skim"]:
+                    _cep_r = MUNITION_CEP_M.get(mname, 0)
+                    if _cep_r > 0:
+                        cep_circles[mname].append(cep_circle_kml(
+                            tgt_lon, tgt_lat, _cep_r, mdef["color_bt"],
+                            f"CEP {mname} #{i} ({_cep_r:.0f} m) [BT]", launch_s, t_end_s))
+
                 impact_pts[mname].append(
                     f"      <Placemark>"
                     f"<name>IMPACT #{i} -- {mname}</name><styleUrl>#impact_marker</styleUrl>"
@@ -4502,29 +4985,44 @@ def generate_scenario(scenario_key, seed=42):
 
     intercept_by_cat = {cat: 0 for cat in INTERCEPTOR_COSTS}
     for e in events:
-        if e["is_int"]:
-            mdef = MUNITIONS[e["mname"]]
-            style = mdef.get("interceptor_style", "")
-            cat = ("CIWS / SeaRAM"         if style == "us_ciws"
-                   else "Naval Gun / Phalanx" if style == "us_naval_gun"
-                   else "SM-6 / SM-2")
-            intercept_by_cat[cat] += 1
+        if e["is_int"] and e.get("interceptor_category_ev"):
+            intercept_by_cat[e["interceptor_category_ev"]] += 1
     us_intercept_cost = sum(INTERCEPTOR_COSTS[c] * n for c, n in intercept_by_cat.items())
 
     us_strike_cost = sum(US_STRIKE_MUNITIONS[e["munition"]]["cost_usd"]
                          for e in strike_events)
 
     # ── Breakthrough damage: ship/aircraft losses + casualties ───────────────
+    # breakthroughs: all penetrations (for sinking model and display counts)
+    # hull_hits: penetrations that land within _SHIP_HIT_RADIUS_M of a ship hull
+    # Only hull hits produce structural damage, casualties, and cost accounting.
     breakthroughs = [e for e in events if not e["is_int"]]
-    us_ship_damage = sum(MUNITIONS[e["mname"]]["damage_per_hit_usd"] for e in breakthroughs)
+    hull_hits     = [e for e in breakthroughs if e.get("hit_ship_id")]
+    us_ship_damage = sum(MUNITIONS[e["mname"]]["damage_per_hit_usd"] for e in hull_hits)
     # Cap ship damage at total CSG replacement value (can't lose more than you have)
     us_ship_damage = min(us_ship_damage, TOTAL_CSG_VALUE)
 
-    us_mil_kia = int(sum(MUNITIONS[e["mname"]]["kia_per_hit"] for e in breakthroughs))
-    us_mil_wia = int(sum(MUNITIONS[e["mname"]]["wia_per_hit"] for e in breakthroughs))
+    us_mil_kia = int(sum(MUNITIONS[e["mname"]]["kia_per_hit"] for e in hull_hits))
+    us_mil_wia = int(sum(MUNITIONS[e["mname"]]["wia_per_hit"] for e in hull_hits))
     # Cap casualties at total personnel at risk
     us_mil_kia = min(us_mil_kia, TOTAL_CSG_PERSONNEL)
     us_mil_wia = min(us_mil_wia, TOTAL_CSG_PERSONNEL - us_mil_kia)
+
+    # ── Magazine summary (used in narrative and results dict) ─────────────────
+    # _vls_capacity = total initial guided-missile load across all CSGs
+    #                 (rounds remaining + rounds fired = initial load)
+    # _vls_remaining = rounds still in magazine at end of battle
+    # _cap_hit = True if any CSG exhausted all guided missiles (SM-6/SM-2/ESSM/RAM)
+    _vls_capacity  = sum(
+        s.sm6 + s.sm2 + s.essm + s.ram
+        + s.shots["SM-6"] + s.shots["SM-2"] + s.shots["ESSM"] + s.shots["RAM"]
+        for s in csg_states.values()
+    )
+    _vls_remaining = sum(s.sm6 + s.sm2 + s.essm + s.ram for s in csg_states.values())
+    _cap_hit_abm   = any(
+        s.sm6 == 0 and s.sm2 == 0 and s.essm == 0 and s.ram == 0
+        for s in csg_states.values()
+    )
 
     # ================================================================
     # PER-CSG DAMAGE BREAKDOWN WITH PROBABILISTIC SINKING
@@ -4558,14 +5056,38 @@ def generate_scenario(scenario_key, seed=42):
         # Identify which CSG this iteration covers by name.
         csg_name = csg["name"]
 
-        # Collect all breakthrough (non-intercepted) hits on this CSG.
-        breakthrough_hit_events = [e for e in breakthroughs if e["csg"]["name"] == csg_name]
+        # hull_hits_csg: only penetrations that physically struck a ship hull (within 20 m).
+        # Used for damage, casualty, and sinking calculations.
+        # penetrations_csg: all non-intercepted events — used for display counts only.
+        hull_hits_csg  = [e for e in hull_hits  if e["csg"]["name"] == csg_name]
+        penetrations_csg = [e for e in breakthroughs if e["csg"]["name"] == csg_name]
+        breakthrough_hit_events = hull_hits_csg   # alias for sinking model below
 
-        # Count direct hits and tally direct-hit dollar and casualty costs.
-        direct_hit_count = len(breakthrough_hit_events)
-        damage_value_usd = sum(MUNITIONS[e["mname"]]["damage_per_hit_usd"] for e in breakthrough_hit_events)
-        killed_in_action = int(sum(MUNITIONS[e["mname"]]["kia_per_hit"] for e in breakthrough_hit_events))
-        wounded_in_action = int(sum(MUNITIONS[e["mname"]]["wia_per_hit"] for e in breakthrough_hit_events))
+        # Count direct hull hits and tally structural damage + casualties.
+        # Scale by target ship role: a hit on the CVN has different consequences
+        # than a hit on an escort DDG.
+        direct_hit_count = len(hull_hits_csg)
+        damage_value_usd = sum(
+            MUNITIONS[e["mname"]]["damage_per_hit_usd"]
+            * _SHIP_ROLE_DAMAGE_SCALE.get(
+                next((sh["role"] for sh in csg_ships[csg_name]
+                      if sh["id"] == e.get("hit_ship_id")), "DDG"), 1.0)
+            for e in hull_hits_csg
+        )
+        killed_in_action = int(sum(
+            MUNITIONS[e["mname"]]["kia_per_hit"]
+            * _SHIP_ROLE_KIA_SCALE.get(
+                next((sh["role"] for sh in csg_ships[csg_name]
+                      if sh["id"] == e.get("hit_ship_id")), "DDG"), 1.0)
+            for e in hull_hits_csg
+        ))
+        wounded_in_action = int(sum(
+            MUNITIONS[e["mname"]]["wia_per_hit"]
+            * _SHIP_ROLE_KIA_SCALE.get(
+                next((sh["role"] for sh in csg_ships[csg_name]
+                      if sh["id"] == e.get("hit_ship_id")), "DDG"), 1.0)
+            for e in hull_hits_csg
+        ))
 
         # Determine hull status from the hit-timeline populated in Phase 2.
         # tenth_hit_s → mission-killed (DESTROYED); first_hit_s → damaged only.
@@ -4576,9 +5098,8 @@ def generate_scenario(scenario_key, seed=42):
         else:
             damage_status_before_sinking = "INTACT"
 
-        # Weighted effective hits: heavier munitions (e.g. YJ-12) count for more
-        # than light sea-skimmers (e.g. C-801) in the sinking probability model.
-        weighted_effective_hits = sum(SINKING_WEIGHT.get(e["mname"], 1.0) for e in breakthrough_hit_events)
+        # Weighted effective hits: heavier munitions count more in the sinking probability model.
+        weighted_effective_hits = sum(SINKING_WEIGHT.get(e["mname"], 1.0) for e in hull_hits_csg)
 
         # Compute sinking_probability via the calibrated logistic sigmoid.
         if damage_status_before_sinking == "DESTROYED":
@@ -4626,22 +5147,19 @@ def generate_scenario(scenario_key, seed=42):
             "sink_prob":      sinking_probability,
             "is_sunk":        hull_is_sunk,
             "eff_hits":       weighted_effective_hits,
+            "sink_hull":      sink_hull,   # hull loss attributable to sinking (not direct hits)
+            "sink_kia":       sink_kia,    # casualties attributable to sinking (not direct hits)
         }
 
     # Fold sinking losses back into aggregate cost/casualty totals.
-    # total_sinking_hull_loss_usd: extra hull loss from sunk ships (beyond direct hits).
-    total_sinking_hull_loss_usd = sum(bd["damage_usd"] - sum(
-        MUNITIONS[e["mname"]]["damage_per_hit_usd"]
-        for e in breakthroughs if e["csg"]["name"] == cn
-    ) for cn, bd in csg_breakdown.items() if bd["is_sunk"])
+    # sink_hull and sink_kia are stored directly in csg_breakdown to avoid
+    # subtraction mismatches between hull_hits-based and breakthroughs-based sums.
+    total_sinking_hull_loss_usd = sum(
+        bd["sink_hull"] for bd in csg_breakdown.values() if bd["is_sunk"])
     us_ship_damage = min(us_ship_damage + total_sinking_hull_loss_usd, TOTAL_CSG_VALUE)
 
-    # total_sinking_kia: extra KIA from sunk ships (beyond direct-hit casualties).
     total_sinking_kia = sum(
-        bd["kia"] - int(sum(MUNITIONS[e["mname"]]["kia_per_hit"]
-                            for e in breakthroughs if e["csg"]["name"] == cn))
-        for cn, bd in csg_breakdown.items() if bd["is_sunk"]
-    )
+        bd["sink_kia"] for bd in csg_breakdown.values() if bd["is_sunk"])
     us_mil_kia = min(us_mil_kia + total_sinking_kia, TOTAL_CSG_PERSONNEL)
 
     # ── Per-munition Iranian offensive cost breakdown ─────────────────────────
@@ -4751,7 +5269,7 @@ def generate_scenario(scenario_key, seed=42):
         "actual_launched": actual_launched,
         "actual_intercepted": actual_intercepted,
         "actual_breakthrough": actual_breakthrough,
-        "cap_hit": actual_intercepted >= intercept_cap_hard_limit,
+        "cap_hit": _cap_hit_abm,
         "csg_breakdown": csg_breakdown,
         "iran_cost_by_munition": iran_cost_by_munition,
         "iaf_cost": iaf_cost,
@@ -4789,8 +5307,8 @@ def generate_scenario(scenario_key, seed=42):
     _bt_pct    = round(100 * actual_breakthrough / max(1, actual_launched))
     _supp      = n_missiles - actual_launched
     _supp_pct  = round(100 * _supp / max(1, n_missiles))
-    _cap_flag  = actual_intercepted >= intercept_cap_hard_limit
-    _vls_head  = max(0, intercept_cap_hard_limit - actual_intercepted)
+    _cap_flag  = _cap_hit_abm
+    _vls_head  = _vls_remaining
     _cpk       = fmt_cost(us_intercept_cost / max(1, actual_intercepted))
     _destroyed_csgs = [c["name"] for c in csg_fleet if c["name"] in tenth_hit_s]
     _fh_times  = sorted(first_hit_s.values())  if first_hit_s  else []
@@ -4841,11 +5359,11 @@ def generate_scenario(scenario_key, seed=42):
 
     # ── III. Defensive Performance Analysis ─────────────────────────────────
     _vls_note = (
-        f"CRITICAL: Aegis VLS ceiling (~{intercept_cap_hard_limit:,} intercepts) was reached — subsequent"
+        f"CRITICAL: Aegis VLS guided missiles exhausted (initial load ~{_vls_capacity:,}) — subsequent"
         f" volleys faced degraded intercept probability as magazines approached depletion."
         if _cap_flag else
-        f"VLS headroom remaining: {_vls_head:,} intercepts"
-        f" ({round(100*_vls_head/max(1,intercept_cap_hard_limit))}% of capacity) — defense posture sustainable."
+        f"VLS headroom remaining: {_vls_head:,} guided rounds"
+        f" ({round(100*_vls_head/max(1,_vls_capacity))}% of initial load) — defense posture sustainable."
     )
     _III = _para(
         "══ III. DEFENSIVE PERFORMANCE ANALYSIS ═══════════════════════════════════",
@@ -5326,6 +5844,14 @@ def generate_scenario(scenario_key, seed=42):
                               csg_fleet=csg_fleet, hits_timeline=hits_timeline)
     flash_markers = gen_csg_tour_flash_markers(csg_fleet, tenth_hit_s)
 
+    # ── Dynamic legend ScreenOverlays (one per CSG-destruction state) ─────────
+    _legend_states = []
+    if out_dir:
+        _legend_states = generate_dynamic_legend_pngs(
+            scenario_key, scenario_config, events, csg_fleet,
+            first_hit_s, tenth_hit_s, costs, dur_min * 60, out_dir)
+    _screen_overlays = gen_scenario_screen_overlays(_legend_states)
+
     kml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2"
      xmlns:gx="http://www.google.com/kml/ext/2.2">
@@ -5358,6 +5884,8 @@ def generate_scenario(scenario_key, seed=42):
 </div>]]></description>
 {kml_styles()}
 
+{_screen_overlays}
+
 {tour_kml}
 
   <Folder>
@@ -5368,6 +5896,10 @@ def generate_scenario(scenario_key, seed=42):
   <Folder>
     <name>US Forces -- 8 Carrier Strike Groups</name><visibility>1</visibility>
 {gen_us_forces(first_hit_s, tenth_hit_s, asset_end_s, csg_fleet, hits_timeline)}
+{"".join(f'''  <Folder>
+    <name>{c["name"]} — Ship Formation (10 hulls)</name><visibility>1</visibility><open>0</open>
+{gen_csg_ship_kml(c, csg_ships[c["name"]], ship_destroyed_at, group_stopped_at, asset_end_s)}
+  </Folder>''' for c in csg_fleet)}
   </Folder>
 
   <Folder>
@@ -5412,6 +5944,14 @@ def generate_scenario(scenario_key, seed=42):
   </Folder>
 
   <Folder>
+    <name>CEP Impact Zones -- ballistic in-flight (~15% sampled)</name><visibility>1</visibility><open>0</open>
+{"".join(f'''    <Folder>
+      <name>{mn} CEP zones ({len(cep_circles[mn])})</name><open>0</open>
+{"".join(cep_circles[mn])}
+    </Folder>''' for mn in _mnames if cep_circles[mn])}
+  </Folder>
+
+  <Folder>
     <name>Breakthrough Impacts -- {actual_breakthrough}</name><visibility>1</visibility><open>0</open>
 {"".join(f'''    <Folder>
       <name>{mn} impacts ({len(impact_pts[mn])})</name><open>0</open>
@@ -5447,7 +5987,7 @@ def generate_scenario(scenario_key, seed=42):
 </Document>
 </kml>"""
 
-    return kml, actual_launched, actual_intercepted, actual_breakthrough, dur_min, costs
+    return kml, _legend_states, actual_launched, actual_intercepted, actual_breakthrough, dur_min, costs
 
 # ============================================================
 # MASTER KML
@@ -5501,7 +6041,7 @@ def generate_master(stats):
             f"<description>{balloon_description}</description>"
             f"<Style>{black_balloon_style}</Style>"
             f"<visibility>0</visibility>"
-            f"<Link><href>scenarios/scenario_{scenario_key}.kml</href></Link>"
+            f"<Link><href>scenarios/scenario_{scenario_key}.kmz</href></Link>"
             f"</NetworkLink>"
         )
 
@@ -5735,6 +6275,236 @@ def generate_legend_png(scenario_key, sc, costs, n_launched, n_int, n_bt, dur_mi
     out_path = os.path.join(out_dir, f"legend_{scenario_key}.png")
     img.save(out_path, "PNG")
     return out_path
+
+
+# ============================================================
+# DYNAMIC SCENARIO LEGEND (updates on each CSG destruction)
+# ============================================================
+
+def generate_dynamic_legend_pngs(scenario_key, sc_config, events, csg_fleet,
+                                  first_hit_s, tenth_hit_s, costs, dur_s, out_dir):
+    """
+    Generate N+1 PNG legend cards for a scenario — one per battle state:
+      State 0 = scenario start
+      State k = after the k-th CSG has been mission-killed (tenth_hit_s reached)
+
+    Returns a list of (png_path, begin_s, end_s) triples, one per state.
+    Returns [] if Pillow is not installed.
+    """
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError:
+        return []
+
+    # ── Layout ───────────────────────────────────────────────────────────────
+    W        = 410
+    PAD      = 10
+    SWATCH_W = 16
+    SWATCH_H = 11
+    ROW_H    = 18
+    TITLE_H  = 26
+    SEC_H    = 16
+    BG       = (10, 14, 28, 230)
+    FG       = (215, 215, 215)
+    ACCENT   = (80, 160, 255)
+    DIV      = (45, 50, 70)
+    GREEN    = (40, 195, 85)
+    YELLOW   = (255, 175, 35)
+    RED      = (255, 55, 55)
+
+    def _load_font(size, bold=False):
+        candidates = (
+            ["C:/Windows/Fonts/arialbd.ttf", "C:/Windows/Fonts/calibrib.ttf",
+             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"] if bold else
+            ["C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/calibri.ttf",
+             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"]
+        )
+        for p in candidates:
+            if os.path.exists(p):
+                try:
+                    return ImageFont.truetype(p, size)
+                except Exception:
+                    pass
+        return ImageFont.load_default()
+
+    font_title  = _load_font(12, bold=True)
+    font_hdr    = _load_font(10, bold=True)
+    font_body   = _load_font(10)
+    font_small  = _load_font(9)
+
+    # ── Fixed legend rows ────────────────────────────────────────────────────
+    mun_rows = []
+    for mname, mdef in MUNITIONS.items():
+        if any(m["name"] == mname for m in sc_config["munitions"]):
+            rgb   = _kml_color_to_rgb(mdef["color_bt"])
+            label = mdef["label"].split("(")[0].strip()
+            mun_rows.append((rgb, label))
+    for _, sdef in US_STRIKE_MUNITIONS.items():
+        rgb   = _kml_color_to_rgb(sdef["color"])
+        label = sdef["label"].split("(")[0].strip()
+        mun_rows.append((rgb, label))
+    int_rows = [
+        ((136, 204, 255), "SM-6 / SM-2"),
+        ((0,   153, 255), "CIWS / SeaRAM"),
+        ((51,  153, 255), "Naval Gun"),
+    ]
+
+    n_csgs = len(csg_fleet)
+    # Pre-compute image height (same for every state)
+    H = (PAD + TITLE_H + 6             # title + divider gap
+         + SEC_H + 6                   # state label + divider gap
+         + 3 * ROW_H + 6              # 3 stat lines + divider gap
+         + SEC_H + n_csgs * ROW_H + 10 # fleet table + divider gap
+         + SEC_H + len(mun_rows) * ROW_H + 6  # munitions + divider gap
+         + SEC_H + len(int_rows) * ROW_H       # interceptors
+         + PAD)
+
+    # ── State boundaries ────────────────────────────────────────────────────
+    # Sort CSG destructions chronologically
+    destructions = sorted(tenth_hit_s.items(), key=lambda x: x[1])
+    state_times  = [0.0] + [t for _, t in destructions] + [dur_s + 7200]
+    n_states     = len(destructions) + 1
+
+    def _counts_at(T):
+        n_l = sum(1 for e in events if e["launch_s"] <= T)
+        n_i = sum(1 for e in events if e["is_int"] and e["t_int_frac"] is not None
+                  and e["launch_s"] + e["t_int_frac"] * e["flight_s"] <= T)
+        n_b = sum(1 for e in events if not e["is_int"]
+                  and e["launch_s"] + e["flight_s"] <= T)
+        return n_l, n_i, n_b
+
+    def _fleet_at(T):
+        out = {}
+        for c in csg_fleet:
+            n = c["name"]
+            if n in tenth_hit_s and tenth_hit_s[n] <= T:
+                out[n] = ("DESTROYED", tenth_hit_s[n])
+            elif n in first_hit_s and first_hit_s[n] <= T:
+                out[n] = ("DAMAGED", first_hit_s[n])
+            else:
+                out[n] = ("INTACT", None)
+        return out
+
+    def _fc(usd):
+        return f"${usd/1e9:.2f}B" if usd >= 1e9 else f"${usd/1e6:.1f}M"
+
+    legend_paths = []
+
+    for si in range(n_states):
+        begin_s = state_times[si]
+        end_s   = state_times[si + 1]
+        T       = begin_s
+
+        n_l, n_i, n_b = _counts_at(T)
+        fleet          = _fleet_at(T)
+        n_dest = sum(1 for s, _ in fleet.values() if s == "DESTROYED")
+        n_dmg  = sum(1 for s, _ in fleet.values() if s == "DAMAGED")
+        n_ok   = n_csgs - n_dest - n_dmg
+
+        if si == 0:
+            state_lbl   = "INITIAL POSTURE"
+            state_color = GREEN
+        else:
+            _dn, _dt = destructions[si - 1]
+            state_lbl   = f"\u25cf T+{_dt/60:.0f}m  {_dn}  DESTROYED"
+            state_color = RED
+
+        img  = Image.new("RGBA", (W, H), BG)
+        draw = ImageDraw.Draw(img)
+        y    = PAD
+
+        # Title
+        draw.text((PAD, y), sc_config["label"], font=font_title, fill=ACCENT)
+        y += TITLE_H
+        draw.line([(PAD, y), (W - PAD, y)], fill=DIV)
+        y += 6
+
+        # State label
+        draw.text((PAD, y), state_lbl, font=font_hdr, fill=state_color)
+        y += SEC_H
+        draw.line([(PAD, y), (W - PAD, y)], fill=DIV)
+        y += 6
+
+        # Stat lines
+        fleet_summary_color = RED if n_dest > 0 else (YELLOW if n_dmg > 0 else GREEN)
+        stat_lines = [
+            (f"Launched: {n_l:,}   Intercepted: {n_i:,}   Breakthrough: {n_b:,}", FG),
+            (f"Fleet:  {n_dest} DESTROYED   {n_dmg} DAMAGED   {n_ok} INTACT",
+             fleet_summary_color),
+            (f"Iran: {_fc(costs['iran_cost'])}  |  US total: {_fc(costs['total_us_cost'])}  |  Ratio: {costs['exchange_ratio']:.1f}:1",
+             FG),
+        ]
+        for text, color in stat_lines:
+            draw.text((PAD, y), text, font=font_small, fill=color)
+            y += ROW_H
+        draw.line([(PAD, y), (W - PAD, y)], fill=DIV)
+        y += 6
+
+        # Fleet status table
+        draw.text((PAD, y), "FLEET STATUS", font=font_hdr, fill=ACCENT)
+        y += SEC_H
+        for c in csg_fleet:
+            n = c["name"]
+            status, t_s = fleet[n]
+            s_color = RED if status == "DESTROYED" else (YELLOW if status == "DAMAGED" else GREEN)
+            t_lbl   = f"  T+{t_s/60:.0f}m" if t_s is not None else ""
+            draw.text((PAD, y),       f"\u25c6 {n}",         font=font_body, fill=FG)
+            draw.text((PAD + 210, y), f"{status}{t_lbl}",    font=font_body, fill=s_color)
+            y += ROW_H
+        y += 4
+        draw.line([(PAD, y), (W - PAD, y)], fill=DIV)
+        y += 6
+
+        # Iranian munitions legend
+        draw.text((PAD, y), "IRANIAN MUNITIONS", font=font_hdr, fill=ACCENT)
+        y += SEC_H
+        for rgb, lbl in mun_rows:
+            draw.rectangle([PAD, y + 2, PAD + SWATCH_W, y + 2 + SWATCH_H], fill=rgb)
+            draw.text((PAD + SWATCH_W + 6, y + 1), lbl, font=font_body, fill=FG)
+            y += ROW_H
+        draw.line([(PAD, y), (W - PAD, y)], fill=DIV)
+        y += 6
+
+        # US interceptor legend
+        draw.text((PAD, y), "US / COALITION INTERCEPTORS", font=font_hdr, fill=ACCENT)
+        y += SEC_H
+        for rgb, lbl in int_rows:
+            draw.rectangle([PAD, y + 2, PAD + SWATCH_W, y + 2 + SWATCH_H], fill=rgb)
+            draw.text((PAD + SWATCH_W + 6, y + 1), lbl, font=font_body, fill=FG)
+            y += ROW_H
+
+        out_path = os.path.join(out_dir, f"legend_{scenario_key}_state{si}.png")
+        img.save(out_path, "PNG")
+        legend_paths.append((out_path, begin_s, end_s))
+
+    return legend_paths
+
+
+def gen_scenario_screen_overlays(legend_states):
+    """
+    Build KML ScreenOverlay elements (top-right corner) from a list of
+    (img_path, begin_s, end_s) triples produced by generate_dynamic_legend_pngs.
+    Images are referenced as  images/<basename>  (relative inside KMZ).
+    """
+    if not legend_states:
+        return ""
+    parts = []
+    for i, (img_path, begin_s, end_s) in enumerate(legend_states):
+        img_name = os.path.basename(img_path)
+        begin_ts = fmt_time(sim_time(begin_s))
+        end_ts   = fmt_time(sim_time(end_s))
+        parts.append(
+            f'  <ScreenOverlay id="legend_overlay_{i}">\n'
+            f'    <name>Legend state {i}</name>\n'
+            f'    <Icon><href>images/{img_name}</href></Icon>\n'
+            f'    <TimeSpan><begin>{begin_ts}</begin><end>{end_ts}</end></TimeSpan>\n'
+            f'    <overlayXY x="1" y="1" xunits="fraction" yunits="fraction"/>\n'
+            f'    <screenXY x="0.99" y="0.98" xunits="fraction" yunits="fraction"/>\n'
+            f'    <rotationXY x="0" y="0" xunits="fraction" yunits="fraction"/>\n'
+            f'    <size x="0" y="0" xunits="fraction" yunits="fraction"/>\n'
+            f'  </ScreenOverlay>'
+        )
+    return "\n".join(parts)
 
 
 # ============================================================
@@ -6412,7 +7182,7 @@ def generate_html_reports(stats, all_costs, out_dir):
         )
 
         # ── Metric cards ──────────────────────────────────────────────────
-        _kml_file = f"scenario_{key}.kml"
+        _kml_file = f"scenario_{key}.kmz"
         cards_html = (
             f'<div class="cards">'
             f'<div class="card" style="border-top-color:{IRAN_C}">'
@@ -6932,11 +7702,19 @@ def main():
                          "us_win_c2_disrupted", "us_win_arsenal_attrition",
                          "one_percent_probe", "one_percent_fatah2"):
         print(f"  Generating {scenario_key} ...")
-        kml_content, n_launched, n_intercepted, n_breakthrough, duration_min, costs = generate_scenario(scenario_key, seed=seeds[scenario_key])
-        output_path = os.path.join(out, f"scenario_{scenario_key}.kml")
-        with open(output_path, "w", encoding="utf-8") as file_handle:
-            file_handle.write(kml_content)
+        kml_content, legend_states, n_launched, n_intercepted, n_breakthrough, duration_min, costs = \
+            generate_scenario(scenario_key, seed=seeds[scenario_key], out_dir=out)
+
+        # ── Write per-scenario KMZ (KML + dynamic legend images bundled) ──────
+        import zipfile as _zf
+        output_path = os.path.join(out, f"scenario_{scenario_key}.kmz")
+        with _zf.ZipFile(output_path, "w", _zf.ZIP_DEFLATED) as zf:
+            zf.writestr("doc.kml", kml_content.encode("utf-8"))
+            for img_path, _, _ in legend_states:
+                if os.path.exists(img_path):
+                    zf.write(img_path, f"images/{os.path.basename(img_path)}")
         size_mb = os.path.getsize(output_path) / 1_048_576
+
         scenario_config = SCENARIOS[scenario_key]
         stats[scenario_key] = (scenario_config["label"], n_launched, n_intercepted, n_breakthrough, duration_min)
         all_costs[scenario_key] = costs
@@ -6949,7 +7727,7 @@ def main():
 
         intercept_by_category = costs["intercept_by_cat"]
         print(f"    {scenario_key}: {n_launched} launched | {n_intercepted} intercepted | {n_breakthrough} breakthrough | "
-              f"~{duration_min:.0f} min | {size_mb:.1f} MB -> {output_path}")
+              f"~{duration_min:.0f} min | {size_mb:.1f} MB | {len(legend_states)} legend states -> {output_path}")
         print(f"      Iran offensive: {_fc(costs['iran_cost'])}"
               f" | US: {_fc(costs['us_intercept_cost'])} intercept"
               f" ({intercept_by_category['SM-6 / SM-2']} SM-6, {intercept_by_category['CIWS / SeaRAM']} CIWS, {intercept_by_category['Naval Gun / Phalanx']} NavGun)"
