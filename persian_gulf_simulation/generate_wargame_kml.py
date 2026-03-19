@@ -93,6 +93,7 @@ Scenarios (approximate totals after 5K Shahed cap)
   W -- US Wins: Allied Umbrella: ~550 mixed (five-layer coalition defense)       =    ~550 total  [P_win ≈ 83%]
   X -- US Wins: C2 Disrupted: ~900 fragmented, no salvo coordination             =    ~900 total  [P_win ≈ 71%]
   Y -- US Wins: Arsenal Attrited: ~750 legacy-only (prior war degraded)          =    ~750 total  [P_win ≈ 65%]
+ BB -- Full Ballistic Surge:    ~2,500 ballistic missiles, no drones             =  ~2,500 total  [full reconstituted stockpile, 10% Fattah-1 HGV]
 
 Output
 ------
@@ -123,6 +124,7 @@ Output
   scenarios/scenario_us_win_allied_umbrella.kml scenarios/scenario_us_win_allied_umbrella.html
   scenarios/scenario_us_win_c2_disrupted.kml   scenarios/scenario_us_win_c2_disrupted.html
   scenarios/scenario_us_win_arsenal_attrition.kml scenarios/scenario_us_win_arsenal_attrition.html
+  scenarios/scenario_ballistic_surge.kml          scenarios/scenario_ballistic_surge.html
   scenarios/summary.html
   wargame_master.kml
   wargame_summary.kmz
@@ -312,8 +314,8 @@ US_CSGS = [
     #   DDG-51 Flight II/IIA: ~$1.8B  |  Flight III: ~$2.2B  |  DDG-1000: ~$4.4B
     {
         "name":    "USS Abraham Lincoln (CVN-72)",
-        "lon": 56.5, "lat": 26.4,
-        "heading_deg": 270,
+        "lon": 57.1126, "lat": 25.3147,
+        "heading_deg": 334,
         "class":   "Nimitz",
         "has_cruiser": False,
         "escorts": "3 × DDG-51 Flight IIA (DDG-77, DDG-111, DDG-121) — no cruiser",
@@ -332,8 +334,8 @@ US_CSGS = [
     },
     {
         "name":    "USS Gerald R. Ford (CVN-78)",
-        "lon": 55.3, "lat": 25.9,
-        "heading_deg": 270,
+        "lon": 56.9378, "lat": 26.5679,
+        "heading_deg": 324,
         "class":   "Ford",
         "has_cruiser": True,
         "escorts": "3 × DDG-51 Flight III + CG-60 USS Normandy (122 VLS)",
@@ -352,8 +354,8 @@ US_CSGS = [
     },
     {
         "name":    "USS George H.W. Bush (CVN-77)",
-        "lon": 57.2, "lat": 26.8,
-        "heading_deg": 270,
+        "lon": 55.9325, "lat": 26.3096,
+        "heading_deg": 213,
         "class":   "Nimitz",
         "has_cruiser": True,
         "escorts": "3 × DDG-51 Flight IIA + CG-55 USS Leyte Gulf (122 VLS)",
@@ -370,8 +372,8 @@ US_CSGS = [
     # ── Lettered CSGs A–E ─────────────────────────────────────────────────────
     {
         "name":    "CSG Alpha",
-        "lon": 62.0, "lat": 22.5,   # Northern Arabian Sea
-        "heading_deg": 270,
+        "lon": 54.6997, "lat": 25.7345,   # on transit path
+        "heading_deg": 255,
         "class":   "Nimitz",
         "has_cruiser": False,
         "escorts": "3 × DDG-51 Flight III (DESRON Alpha) — no cruiser",
@@ -387,8 +389,8 @@ US_CSGS = [
     },
     {
         "name":    "CSG Bravo",
-        "lon": 51.5, "lat": 27.0,   # Northern Gulf
-        "heading_deg": 270,
+        "lon": 53.3122, "lat": 25.9028,   # on transit path
+        "heading_deg": 295,
         "class":   "Nimitz",
         "has_cruiser": True,
         "escorts": "3 × DDG-51 Flight IIA + CG-70 USS Lake Erie (122 VLS)",
@@ -404,8 +406,8 @@ US_CSGS = [
     },
     {
         "name":    "CSG Charlie",
-        "lon": 53.5, "lat": 25.8,   # Central Gulf
-        "heading_deg": 270,
+        "lon": 52.0142, "lat": 26.4037,   # on transit path
+        "heading_deg": 295,
         "class":   "Nimitz",
         "has_cruiser": False,
         "escorts": "4 × DDG-51 Flight IIA (DESRON Charlie) — no cruiser",
@@ -422,8 +424,8 @@ US_CSGS = [
     },
     {
         "name":    "CSG Delta",
-        "lon": 56.0, "lat": 24.0,   # Central Gulf south
-        "heading_deg": 270,
+        "lon": 51.0514, "lat": 27.3277,   # on transit path
+        "heading_deg": 323,
         "class":   "Ford",
         "has_cruiser": True,
         "escorts": "3 × DDG-51 Flight III + CG-65 USS Chosin (122 VLS)",
@@ -439,8 +441,8 @@ US_CSGS = [
     },
     {
         "name":    "CSG Echo",
-        "lon": 59.0, "lat": 23.5,   # Eastern Gulf / Hormuz approaches
-        "heading_deg": 270,
+        "lon": 50.4517, "lat": 28.4393,   # on transit path
+        "heading_deg": 343,
         "class":   "Nimitz",
         "has_cruiser": False,
         "escorts": "3 × DDG-51 Flight IIA + 1 × DDG-1000 Zumwalt (DESRON Echo)",
@@ -459,6 +461,39 @@ US_CSGS = [
 
 TOTAL_CSG_PERSONNEL = sum(csg["personnel"] for csg in US_CSGS)
 TOTAL_CSG_VALUE     = sum(csg["asset_value_usd"] for csg in US_CSGS)
+
+# ── USS Tripoli (LHA-7) — targeted by drone supplement in ballistic_surge ─────
+# America-class Landing Helicopter Assault ship; no SM-6/SM-2; SeaRAM + CIWS only.
+USS_TRIPOLI_FLEET = {
+    "name":    "USS Tripoli (LHA-7)",
+    "lon": 50.635, "lat": 26.215,    # near Bahrain / 5th Fleet AOR
+    "heading_deg": 340,
+    "class":   "LHA",
+    "has_cruiser": False,
+    "escorts": "SeaRAM × 2 + Phalanx CIWS × 2 — no DDG escort modeled",
+    "sm6_low":   0, "sm6_high":   0,
+    "sm2_low":   0, "sm2_high":   0,
+    "essm_low":  0, "essm_high":  0,
+    "ram_low":  22, "ram_high":  22,   # 2 × SeaRAM (11 rounds each)
+    "tlam_est":  0,
+    "sm6_est": 0, "sm2_est": 0, "essm_est": 0, "ram_est": 22,
+    # LHA-7 hull ($3.5B) + embarked F-35B air wing ($1.3B)
+    "asset_value_usd": 4_800_000_000,
+    # ~1,800 crew + ~1,800 embarked Marines (MAGTF)
+    "personnel": 3_600,
+}
+
+# 4-CSG fleet for the ballistic_surge scenario: the 3 named CVNs + CSG Alpha ("the first")
+BALLISTIC_SURGE_CSGS = [
+    c for c in US_CSGS if c["name"] in {
+        "USS Abraham Lincoln (CVN-72)",
+        "USS Gerald R. Ford (CVN-78)",
+        "USS George H.W. Bush (CVN-77)",
+        "CSG Alpha",
+    }
+]
+# Include USS Tripoli as the drone target element (5th fleet member)
+BALLISTIC_SURGE_WITH_TRIPOLI = BALLISTIC_SURGE_CSGS + [USS_TRIPOLI_FLEET]
 
 # ── Strait of Hormuz column formation ────────────────────────────────────────
 # 8 CSGs in single-file column transiting the strait, lead at (56.515, 26.622),
@@ -1883,6 +1918,83 @@ SCENARIOS = {
     },
 
     # ------------------------------------------------------------------
+    # SCENARIO BB — Full Ballistic Surge (2,500 Missiles, No Drones)
+    # ------------------------------------------------------------------
+    "ballistic_surge": {
+        "label": "Scenario BB -- Full Ballistic Surge (2,500 Missiles + 26 Tripoli Drones, 4 CSGs, 10% Fattah-1 HGV)",
+        "description": (
+            "SITUATION: Iran commits its entire reconstituted ballistic missile stockpile "
+            "(~2,500 rounds; Alma Research / 19FortyFive Feb 2026 estimate) in a single "
+            "coordinated barrage against the 4-CVN battle group (Lincoln, Ford, Bush, Alpha). "
+            "Simultaneously, 26 Shahed-136 loitering munitions — including 1 AI/computer-vision "
+            "guided variant with guaranteed terminal lock-on — are specifically tasked against "
+            "USS Tripoli (LHA-7), operating as an amphibious assault platform in the adjacent "
+            "operating area near Bahrain. The Tripoli's SeaRAM (22 rounds) and Phalanx CIWS "
+            "provide the only point-defense; she has no SM-6, no SM-2, and no DDG escort.\n\n"
+            "THREAT COMPOSITION — MAIN BALLISTIC SALVO (2,500 missiles against 4 CVN/CSGs):\n"
+            "  - Zolfaghar SRBM (25%, ~620 rounds): 450 kg warhead, GPS &lt;10m CEP; "
+            "    most numerous surviving SRBM post-October 2024 Israeli strikes\n"
+            "  - Emad MRBM (20%, ~497 rounds): 750 kg maneuvering RV; Aegis Pk drops "
+            "    to ~35–45% vs ~75% for non-maneuvering ballistic\n"
+            "  - Shahab-3 MRBM (20%, ~497 rounds): 500 kg warhead, Mach 6–7 terminal; "
+            "    legacy stockpile, still lethal at scale\n"
+            "  - Khalij Fars ASBM (15%, ~373 rounds): EO/IR terminal seeker tracks "
+            "    carrier thermal signature; purpose-built CVN-killer\n"
+            "  - Fateh-313 SRBM (10%, ~249 rounds): 450 kg GPS precision; radar arrays, "
+            "    VLS magazine structures, flight deck superstructures\n"
+            "  - Fattah-1 HGV (10%, ~249 rounds): Mach 13–15 hypersonic glide vehicle; "
+            "    Aegis Pk estimated 5–15%; near-uninterceptable; each hit near-certain CVN kill\n\n"
+            "TRIPOLI DRONE SUPPLEMENT (26 Shahed-136 targeting LHA-7):\n"
+            "  - 25 standard Shahed-136: 40 kg warhead; SeaRAM engages each at ~3–5 km; "
+            "    CIWS backup at ~1.5 km. With 26 rounds vs 22 SeaRAM + CIWS, magazine "
+            "    exhaustion is likely before the final drones arrive.\n"
+            "  - 1 AI/EO-IR-guided Shahed-136: EO/IR terminal seeker acquires LHA-7 "
+            "    thermal signature at 35 km; maneuvering final approach defeats CIWS "
+            "    lead-angle prediction — guaranteed hit. LHA-7's flight deck and F-35B "
+            "    parking are the primary aim-point.\n\n"
+            "AEGIS SATURATION (4 CVNs): With ~625 inbound per CSG (2,500 / 4), the fire-control "
+            "queue is oversubscribed ~35× vs the 18-simultaneous-channel Aegis ceiling. "
+            "SM-6 magazines (~40 per CSG × 4 CSGs ≈ 160 SM-6 shots total) are exhausted by "
+            "the time only ~6–8% of the salvo has arrived. Once magazines empty, every remaining "
+            "inbound is uncontested — the Aegis fires its last SM-6 while 2,300+ missiles are still "
+            "inbound. Expected intercepts: ~190–220 total. Expected breakthrough: ~2,300+.\n\n"
+            "ASSESSMENT: Iran's full reconstituted ballistic stockpile exhausts all 4 CSG "
+            "magazines by the first ~160 rounds, leaving 2,340+ missiles completely uncontested. "
+            "This is not saturation — it is abolition of the defense. The Shahed supplement "
+            "specifically engineers the same effect against Tripoli's 22-round SeaRAM: the "
+            "first 22 drones absorb the entire magazine; the 23rd through 26th arrive unopposed, "
+            "including the guaranteed AI-guided hull strike.\n\n"
+            "2,500 ballistic missiles (4 CVN/CSG fleet) + 26 Shahed-136 (Tripoli) | "
+            "~190–220 intercepted (magazine-exhausted by ~8% through salvo) | ~2,300+ breakthrough — "
+            "catastrophic fleet loss. Tripoli: ~3–5 drone hits including 1 AI-guided LHA-7 flight deck hit."
+        ),
+        "csg_fleet":     BALLISTIC_SURGE_WITH_TRIPOLI,   # 4 CVNs + USS Tripoli (5 elements)
+        "ballistic_targets": {                            # ballistic missiles only hit these 4
+            "USS Abraham Lincoln (CVN-72)",
+            "USS Gerald R. Ford (CVN-78)",
+            "USS George H.W. Bush (CVN-77)",
+            "CSG Alpha",
+        },
+        "drone_focus_csg": "USS Tripoli (LHA-7)",        # all Shahed-136 drones target Tripoli
+        "n_missiles":     2526,
+        "intercept_cap": 4000,
+        "intercept_rate": 0.720,   # saturation at scale + HGV Pk drag
+        "wave_s":         10800,   # 3-hour coordinated volley
+        "n_arc":           12,
+        "n_sm6":           20,     # full magazine initially; exhausted by mid-engagement
+        "n_us_strikes_per_csg": 30,
+        "munitions": [
+            {"name": "Zolfaghar SRBM",   "weight": 0.247},   # ~624 rounds
+            {"name": "Emad MRBM",        "weight": 0.197},   # ~498 rounds
+            {"name": "Shahab-3 MRBM",    "weight": 0.197},   # ~498 rounds
+            {"name": "Khalij Fars ASBM", "weight": 0.148},   # ~374 rounds
+            {"name": "Fateh-313 SRBM",   "weight": 0.099},   # ~250 rounds
+            {"name": "Fattah-1 HGV",     "weight": 0.099},   # ~250 rounds
+            {"name": "Shahed-136",       "weight": 0.013},   # ~33 → ~26 expected at Tripoli
+        ],
+    },
+
+    # ------------------------------------------------------------------
     # SCENARIO K — ASCM Swarm (Sea-Skimming Saturation)
     # ------------------------------------------------------------------
     "ascm_swarm": {
@@ -2928,27 +3040,31 @@ def kml_styles():
     <PolyStyle><color>0a00ccff</color><fill>1</fill><outline>1</outline></PolyStyle>
   </Style>
   <Style id="us_csg_marker">
+    <!-- US ships ALIVE — green (ABGR ff00ff00 = full-alpha pure green) -->
     <IconStyle>
-      <color>ffffffff</color><scale>0.7</scale>
-      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/wht-stars.png</href></Icon>
+      <color>ff00ff00</color><scale>0.7</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/grn-stars.png</href></Icon>
     </IconStyle>
-    <LabelStyle><color>ffffffff</color><scale>0.7</scale></LabelStyle>
+    <LabelStyle><color>ff00ff00</color><scale>0.7</scale></LabelStyle>
   </Style>
   <Style id="us_csg_hit_marker">
+    <!-- US ships UNDER ATTACK — amber/yellow indicates damage -->
     <IconStyle>
-      <color>ff0060ff</color><scale>1.8</scale>
-      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href></Icon>
+      <color>ff00ccff</color><scale>1.8</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/ylw-circle.png</href></Icon>
     </IconStyle>
-    <LabelStyle><color>ff0060ff</color><scale>1.1</scale></LabelStyle>
+    <LabelStyle><color>ff00ccff</color><scale>1.1</scale></LabelStyle>
   </Style>
   <Style id="us_csg_neutralized_marker">
+    <!-- US ships DEAD — fade to white; icon persists for full simulation duration -->
     <IconStyle>
-      <color>ff222222</color><scale>1.6</scale>
-      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href></Icon>
+      <color>ffffffff</color><scale>1.6</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/wht-circle.png</href></Icon>
     </IconStyle>
-    <LabelStyle><color>ff444444</color><scale>1.0</scale></LabelStyle>
+    <LabelStyle><color>ffffffff</color><scale>1.0</scale></LabelStyle>
   </Style>
   <Style id="iran_site_marker">
+    <!-- Iranian sites ACTIVE — red (ABGR ff0000ff = full-alpha pure red) -->
     <IconStyle>
       <color>ff0000ff</color><scale>0.7</scale>
       <Icon><href>http://maps.google.com/mapfiles/kml/paddle/red-stars.png</href></Icon>
@@ -2956,11 +3072,12 @@ def kml_styles():
     <LabelStyle><color>ff0000ff</color><scale>0.7</scale></LabelStyle>
   </Style>
   <Style id="iran_site_inactive">
+    <!-- Iranian sites DESTROYED — fade to black; icon persists for full simulation duration -->
     <IconStyle>
-      <color>ff666666</color><scale>0.8</scale>
-      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href></Icon>
+      <color>ff000000</color><scale>0.8</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/wht-circle.png</href></Icon>
     </IconStyle>
-    <LabelStyle><color>ff888888</color><scale>0.7</scale></LabelStyle>
+    <LabelStyle><color>ff333333</color><scale>0.7</scale></LabelStyle>
   </Style>
   <Style id="intercept_marker">
     <!-- US kill point — black square, flashes black/white for 30 s -->
@@ -3026,17 +3143,18 @@ def kml_styles():
     <LabelStyle><color>ff0022ff</color><scale>1.4</scale></LabelStyle>
   </Style>""")
 
-    # ── Health-color styles for US CSGs: green (intact) → red (neutralized) ──
-    # AABBGGRR: R rises 0→255, G falls 255→0 across 10 damage levels
-    US_CSG_ICON_URL = "http://maps.google.com/mapfiles/kml/paddle/wht-stars.png"
+    # ── Health-color styles for US CSGs: green (intact) → white (destroyed) ──
+    # User spec: "our troops are green and fade to white" when killed.
+    # AABBGGRR: G=ff constant; R and B rise 0→255 as damage increases (green→white).
+    # Dead icons persist for full simulation duration (no TimeSpan end trimming).
+    US_CSG_ICON_URL = "http://maps.google.com/mapfiles/kml/paddle/grn-stars.png"
     for damage_level in range(11):
         if damage_level == 10:
-            kml_color = "ff000000"  # fully neutralized → black
+            kml_color = "ffffffff"  # fully destroyed → pure white
         else:
             damage_fraction = damage_level / 10
-            red_component   = int(255 * damage_fraction)
-            green_component = int(255 * (1.0 - damage_fraction))
-            kml_color = f"ff00{green_component:02x}{red_component:02x}"
+            fade_component  = int(255 * damage_fraction)   # R and B both rise toward white
+            kml_color = f"ff{fade_component:02x}ff{fade_component:02x}"   # ABGR: A=ff B=fade G=ff R=fade
         parts.append(
             f'  <Style id="us_h_{damage_level}">'
             f'<IconStyle><color>{kml_color}</color><scale>0.7</scale>'
@@ -3045,20 +3163,20 @@ def kml_styles():
             f'</Style>'
         )
 
-    # ── Health-color styles for Iranian sites: blue (active) → orange (destroyed) ──
-    # AABBGGRR: B falls 255→0, G rises 0→128, R rises 0→255 across 30 levels
+    # ── Health-color styles for Iranian sites: red (active) → black (destroyed) ──
+    # User spec: "theirs are red and fade to black when they die."
+    # AABBGGRR: R falls 255→0, G=0, B=0 across 30 damage levels (red→black).
+    # Dead icons persist for full simulation duration (TimeSpan end = scenario end_s).
     IRAN_SITE_ICON_ACTIVE    = "http://maps.google.com/mapfiles/kml/paddle/red-stars.png"
-    IRAN_SITE_ICON_DESTROYED = "http://maps.google.com/mapfiles/kml/paddle/wht-stars.png"
+    IRAN_SITE_ICON_DESTROYED = "http://maps.google.com/mapfiles/kml/paddle/wht-circle.png"
     for damage_level in range(31):
         if damage_level == 30:
-            kml_color   = "ffffffff"  # fully destroyed → white
+            kml_color   = "ff000000"  # fully destroyed → pure black
             site_icon   = IRAN_SITE_ICON_DESTROYED
         else:
             damage_fraction = damage_level / 30
-            red_component   = int(255 * damage_fraction)
-            green_component = int(128 * damage_fraction)
-            blue_component  = int(255 * (1.0 - damage_fraction))
-            kml_color       = f"ff{blue_component:02x}{green_component:02x}{red_component:02x}"
+            red_component   = int(255 * (1.0 - damage_fraction))   # red fades to zero
+            kml_color       = f"ff0000{red_component:02x}"          # ABGR: A=ff B=00 G=00 R=red
             site_icon       = IRAN_SITE_ICON_ACTIVE
         parts.append(
             f'  <Style id="ir_h_{damage_level}">'
@@ -4326,6 +4444,17 @@ def generate_scenario(scenario_key, seed=42, out_dir=None):
     _focus_name   = scenario_config.get("focus_csg")
     _focus_csg    = next((c for c in US_CSGS if c["name"] == _focus_name), None)
 
+    # drone_focus_csg: directs all DRONE_TYPE munitions to a specific named CSG
+    _drone_focus_name = scenario_config.get("drone_focus_csg")
+    _drone_focus_csg  = next((c for c in csg_fleet if c["name"] == _drone_focus_name), None) if _drone_focus_name else None
+
+    # ballistic_targets: restricts ballistic (non-drone) targeting to a named subset
+    _ballistic_target_names = scenario_config.get("ballistic_targets")
+    _ballistic_fleet = [c for c in csg_fleet if c["name"] in _ballistic_target_names] \
+        if _ballistic_target_names else csg_fleet
+    if not _ballistic_fleet:
+        _ballistic_fleet = csg_fleet
+
     # Per-munition collections for nested folder output
     _mnames       = [m["name"] for m in scenario_config["munitions"]]
     missile_segs  = {mn: [] for mn in _mnames}
@@ -4375,8 +4504,16 @@ def generate_scenario(scenario_key, seed=42, out_dir=None):
     for i in range(n_missiles):
         mname = weighted_choice(munitions, rng)["name"]
         mdef  = MUNITIONS[mname]
-        _csg_roll = rng.choice(csg_fleet)
-        csg = _focus_csg if _focus_csg else _csg_roll
+        _csg_roll = rng.choice(csg_fleet)   # always consume one RNG call (keeps sequence deterministic)
+        if _focus_csg:
+            csg = _focus_csg
+        elif _drone_focus_csg and mname in DRONE_TYPES:
+            csg = _drone_focus_csg
+        elif _ballistic_target_names and mname not in DRONE_TYPES and _csg_roll["name"] not in _ballistic_target_names:
+            # Redirect ballistic munitions that rolled an excluded CSG to a valid target
+            csg = _ballistic_fleet[csg_fleet.index(_csg_roll) % len(_ballistic_fleet)]
+        else:
+            csg = _csg_roll
 
         # Generate launch time
         if scenario_config.get("iran_detection_launch"):
@@ -5626,6 +5763,21 @@ def generate_scenario(scenario_key, seed=42, out_dir=None):
             f"Saturation is achieved through volume rather than speed — overwhelming "
             f"fire-control track capacity rather than defeating individual intercept "
             f"probabilities."
+        )
+    elif scenario_key == "ballistic_surge":
+        _n_hgv_fired = sum(1 for m in _all_events_for_stats if m.get("munition") == "Fattah-1 HGV") if "_all_events_for_stats" in dir() else int(actual_launched * 0.10)
+        _situation = (
+            f"Iran commits its full reconstituted ballistic missile stockpile — "
+            f"{actual_launched:,} rounds — in a single coordinated volley against the 8-CSG "
+            f"fleet. No drones. Every round carries a 450–750 kg unitary warhead or a Mach 13+ "
+            f"hypersonic glide payload. At ~{actual_launched // 8:,} inbound per CSG, "
+            f"Aegis fire-control queues are oversubscribed ~17× — arithmetic overwhelms the "
+            f"18-simultaneous-channel SM-6 guidance ceiling before the salvo reaches midcourse. "
+            f"The {int(actual_launched * 0.10):,} Fattah-1 HGVs mixed into the barrage face "
+            f"~10% intercept probability each, virtually guaranteeing CVN-hull impacts from "
+            f"that layer alone. This scenario tests whether sheer ballistic volume, even "
+            f"without drone CIWS-saturation support, can defeat the integrated Aegis network "
+            f"through queue exhaustion rather than kinematic evasion."
         )
     elif scenario_key == "ascm_swarm":
         _situation = (
@@ -7410,6 +7562,7 @@ def generate_html_reports(stats, all_costs, out_dir):
         "depleted_drone_first", "depleted_coastal", "depleted_israel_split",
         "us_win_preemption", "us_win_ew_dominance", "us_win_allied_umbrella",
         "us_win_c2_disrupted", "us_win_arsenal_attrition",
+        "ballistic_surge",
     ]
 
     # Scenario comparison table
@@ -7664,12 +7817,2492 @@ def generate_html_reports(stats, all_costs, out_dir):
 
 
 # ============================================================
+# KHARG ISLAND AIR ASSAULT SCENARIO
+# ============================================================
+
+def generate_kharg_assault_kml(out_dir=None, variant="north_west"):
+    """
+    KML/KMZ: USMC heliborne assault on Kharg Island + Shahed-136 drone counterattack.
+
+    variant="north_west" (default):
+      LHA-7 USS Tripoli approaches from south; Marines land on NW airstrip + plateau.
+
+    variant="south_east":
+      LHA-7 USS Tripoli approaches from SE; Marines land on southern beach + east
+      plateau — flanking maneuver to avoid concentrated northern IRGC defences.
+
+    Helicopter assault:
+      12 × MV-22B Osprey  (24 troops, 446 km/h)
+       4 × CH-53E Super Stallion (37 troops, 278 km/h)
+       4 × AH-1Z Viper escort
+      436 Marines/wave × 6 waves = 2,500 Marines ashore
+
+    Drone counterattack (post-landing):
+      2,000 Shahed-136 in 5 waves from multiple Iranian sites
+      5% AI/CV-guided (guaranteed kills) | Stinger Pk 25% | 100-round magazine
+      CEP 30m | kill radius 10m | 50m=-2HP | 100m=-1HP
+
+    Fireteam icons: 1,250 × 4-man fireteams, colour-coded HP, random path walking
+      green=4HP  yellow=3HP  orange=1-2HP  red=KIA (0HP)
+
+    Sortie counter: placemark tracks completed/remaining trips with timeline
+    Ground battle: Lanchester square-law attrition (IRGC vs. USMC, Marines 5× IRGC)
+    Full gx:Track animated drone trajectories with AI two-phase terminal guidance
+
+    Sources: NAVAIR MV-22B fact sheet; Boeing CH-53E spec; IISS Military Balance 2024;
+             MAGTF Handbook; Jane's Intelligence Review; open-source Shahed-136 data
+    """
+    import math, zipfile as _zf, random as _random
+
+    # ── Geography ──────────────────────────────────────────────────────────────
+    KHARG_LON, KHARG_LAT = 50.3285, 29.2605
+
+    if variant == "south_east":
+        # SE flanking approach: fleet from south-east; LZs on south beach + east plateau
+        LZ1_LON,   LZ1_LAT  = 50.317,  29.209    # LZ VIPER  — south beach
+        LZ2_LON,   LZ2_LAT  = 50.334,  29.255    # LZ MAMBA  — east plateau
+        LHA_LON,   LHA_LAT  = 50.510,  29.060    # LHA-7 USS Tripoli (SE approach)
+        LPD1_LON,  LPD1_LAT = 50.430,  29.040    # LPD-30
+        LPD2_LON,  LPD2_LAT = 50.590,  29.040    # LPD-29
+        DDG_LON,   DDG_LAT  = 50.440,  29.150    # DDG escort
+        # Restrict fireteam placement to southern+eastern portions of polygon
+        # South zone: lat < 29.240; East zone: lon > 50.322
+        PLACE_LAT_MAX = 29.240
+        PLACE_LON_MIN = 50.295   # includes both south and east sub-zones
+        SCENARIO_LABEL = "SE Flanking Assault (south beach + east plateau)"
+        OUT_FILENAME   = "kharg_island_assault_se.kmz"
+        SQ_SEED        = 43     # different seed for variety
+    else:
+        # Default NW approach: fleet from south; LZs on NW airstrip + plateau
+        LZ1_LON,   LZ1_LAT  = 50.315,  29.252    # LZ FALCON — airstrip
+        LZ2_LON,   LZ2_LAT  = 50.345,  29.258    # LZ EAGLE  — plateau
+        LHA_LON,   LHA_LAT  = 50.325,  28.715    # LHA-7 USS Tripoli
+        LPD1_LON,  LPD1_LAT = 50.175,  28.690    # LPD-30
+        LPD2_LON,  LPD2_LAT = 50.475,  28.690    # LPD-29
+        DDG_LON,   DDG_LAT  = 50.325,  28.855    # DDG escort
+        PLACE_LAT_MAX = None   # full polygon
+        PLACE_LON_MIN = None
+        SCENARIO_LABEL = "NW Airstrip Assault (airstrip + plateau)"
+        OUT_FILENAME   = "kharg_island_assault.kmz"
+        SQ_SEED        = 42
+
+    BUSH_LON,  BUSH_LAT = 50.843,  28.923    # Bushehr AB — Shahed launch site
+
+    # ── Helicopter parameters ──────────────────────────────────────────────────
+    MV22_KMH, MV22_TROOPS = 446, 24
+    CH53_KMH, CH53_TROOPS = 278, 37
+    AH1Z_KMH               = 295
+    N_MV22, N_CH53, N_AH1Z = 12, 4, 4
+    TROOPS_PER_WAVE = N_MV22 * MV22_TROOPS + N_CH53 * CH53_TROOPS  # 436
+    TOTAL_MARINES   = 2_500
+    FULL_WAVES      = TOTAL_MARINES // TROOPS_PER_WAVE
+    REMAINDER       = TOTAL_MARINES %  TROOPS_PER_WAVE
+    N_WAVES         = FULL_WAVES + (1 if REMAINDER else 0)
+    UNLOAD_S, RELOAD_S = 180, 300
+
+    # ── F-35B Lightning II parameters ─────────────────────────────────────────
+    # LHA-7 USS Tripoli (America-class, aviation-centric) embarks 20 F-35Bs.
+    # Real-world: America-class typically surges 13-16 F-35Bs; 20 is high-density
+    # aviation configuration (no ground vehicles, full aviation stores).
+    # Sources: NAVAIR F-35B STOVL fact sheet; USMC MAGTF Handbook 2025;
+    #          USNI News LHA-7 deployment tracking; Jane's All the World's Aircraft.
+    N_F35B           = 20           # F-35B Lightning IIs embarked on LHA-7
+    F35B_KMH         = 850          # subsonic cruise ≈ Mach 0.8
+    F35B_ALT_M       = 6_000        # strike cruise altitude (m AGL)
+    F35B_CEP_M       = 3.0          # GBU-38 / GBU-32 JDAM GPS/INS CEP (m)
+    # SEAD package (4 aircraft) — AGM-88E AARGM anti-radiation missile
+    #   Range: 150+ km | Speed: Mach 1.8+ (sustained) → Mach 2+ (terminal)
+    #   Guidance: passive-radar + GPS/INS + IIR terminal (can engage silent sites)
+    #   Warhead: WDU-21/B 146 kg blast-fragmentation
+    N_F35B_SEAD      = 4
+    AGM88_PER_SEAD   = 2            # AGM-88E AARGM per SEAD aircraft
+    AGM88_KMH        = 1_800        # AGM-88E sustained speed (≈ Mach 1.8)
+    # CAS package (16 aircraft) — GBU-38 JDAM beast mode + self-defence AAMs
+    #   GBU-38: Mk-82 500 lb body + JDAM kit | GPS/INS | CEP ≤ 3 m
+    #   AIM-120C-7 AMRAAM: BVR self-defence (internal carry)
+    #   AIM-9X Block II: short-range WVR (external pylons)
+    N_F35B_CAS       = N_F35B - N_F35B_SEAD   # 16
+    GBU38_PER_CAS    = 4            # GBU-38 JDAM (500 lb) per CAS sortie
+    AIM120_PER_F35B  = 2            # AIM-120C-7 per aircraft (all sorties)
+    AIM9X_PER_F35B   = 2            # AIM-9X Block II per CAS aircraft
+    F35B_SORTIES     = 2            # sortie rotations (all CAS aircraft)
+    F35B_REARM_S     = 1_800        # on-deck rearm + hot-refuel time (s)
+
+    # ── Fireteam parameters ────────────────────────────────────────────────────
+    MARINES_PER_SQUAD = 4                                    # 4-man fireteams
+    N_SQUADS          = TOTAL_MARINES // MARINES_PER_SQUAD   # 625
+    SQUAD_HP          = MARINES_PER_SQUAD                    # 4 HP per fireteam
+
+    # ── Shahed-136 parameters ──────────────────────────────────────────────────
+    SHAHED_KMH    = 185
+    SHAHED_CEP_M  = 30.0
+    KILL_M        = 10.0    # instant-kill radius
+    DMG2_M        = 50.0    # -2 HP radius
+    DMG1_M        = 100.0   # -1 HP radius
+    DRONE_TOTAL   = 2_000
+    # FIM-92 Stinger Pk vs. Shahed-136:
+    #   DoD operational test baseline: 30% (FM 44-18-1; GAO-02-407T)
+    #   Penalty for Shahed's weak piston-engine IR signature vs. turbojet: −5 pp
+    #   Proximity fuze not fitted (standard RMP Block I issue): no bonus
+    #   Adopted: 0.25 (25%) — consistent with academic median for IR MANPADS
+    #   vs. slow, low-IR-signature targets (Laird & Keane, 2019; RAND MG-1104)
+    STINGER_PK    = 0.25    # FIM-92 Stinger Pk vs. Shahed-136 — see note above
+    STINGER_MAG   = 100     # total Stinger rounds available to the MAGTF
+    STINGER_RNG   = 4.5     # km — Stinger max engagement range vs. slow/low target
+    SHAHED_PEAK   = 50.0    # m — sea-skim cruise altitude
+    SHAHED_SPD_KS = 0.052   # km/s — Shahed-136 cruise (≈187 km/h)
+    # Helicopter proximity kill: AI drone within this radius → 50% Pk vs. helo
+    HELO_KILL_KM  = 3.0     # km — AI drone lethal proximity to helicopter
+
+    # ── Helpers ────────────────────────────────────────────────────────────────
+    def _dist_km(lon1, lat1, lon2, lat2):
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = (math.sin(dlat / 2) ** 2 +
+             math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+             math.sin(dlon / 2) ** 2)
+        return 6_371 * 2 * math.asin(math.sqrt(a))
+
+    def _flt_s(lon1, lat1, lon2, lat2, kmh):
+        return _dist_km(lon1, lat1, lon2, lat2) / kmh * 3_600
+
+    def _dist_m(lon1, lat1, lon2, lat2):
+        """Equirectangular distance in metres — accurate enough for <500 m."""
+        clat = math.cos(math.radians((lat1 + lat2) / 2))
+        dx = (lon2 - lon1) * 111_000 * clat
+        dy = (lat2 - lat1) * 111_000
+        return math.sqrt(dx * dx + dy * dy)
+
+    # ── Kharg Island polygon (user-supplied coastline, ~240 vertices) ─────────
+    # Defines the actual island boundary for marine placement and LZ definition.
+    KHARG_POLY = [
+        (50.332952,29.262433),(50.332159,29.263401),(50.330614,29.265161),(50.329147,29.265400),
+        (50.327973,29.265425),(50.327718,29.265526),(50.327053,29.265972),(50.326033,29.266666),
+        (50.324599,29.266796),(50.323960,29.266787),(50.323503,29.266657),(50.322915,29.266488),
+        (50.322449,29.266348),(50.321785,29.266149),(50.321033,29.266041),(50.320113,29.265830),
+        (50.319075,29.265588),(50.318531,29.265541),(50.318011,29.265382),(50.317310,29.265695),
+        (50.316590,29.266121),(50.316371,29.266397),(50.316169,29.266622),(50.315592,29.267258),
+        (50.315143,29.267411),(50.314650,29.267721),(50.314309,29.267958),(50.314107,29.268180),
+        (50.313906,29.268402),(50.313628,29.268658),(50.313442,29.268827),(50.313088,29.268889),
+        (50.312796,29.268743),(50.312719,29.268325),(50.312489,29.268199),(50.312092,29.267741),
+        (50.311917,29.267399),(50.311970,29.267181),(50.311896,29.266919),(50.311663,29.267013),
+        (50.311198,29.267200),(50.310937,29.267397),(50.310565,29.267498),(50.310265,29.267633),
+        (50.309357,29.268097),(50.307958,29.268302),(50.307273,29.268644),(50.306580,29.269047),
+        (50.306114,29.269358),(50.305464,29.269594),(50.304985,29.269645),(50.304425,29.269789),
+        (50.303866,29.269933),(50.302878,29.270274),(50.301782,29.270810),(50.300949,29.271316),
+        (50.300348,29.271676),(50.299748,29.271804),(50.298854,29.271653),(50.298371,29.271579),
+        (50.297623,29.271811),(50.297301,29.271864),(50.296839,29.271980),(50.296434,29.272119),
+        (50.295642,29.272349),(50.294965,29.272389),(50.294349,29.272230),(50.293994,29.272215),
+        (50.293404,29.272403),(50.293183,29.272555),(50.292653,29.272537),(50.291906,29.272660),
+        (50.291638,29.272566),(50.290678,29.272232),(50.290253,29.272084),(50.289618,29.271866),
+        (50.288475,29.271425),(50.287967,29.271199),(50.287564,29.271010),(50.287045,29.270833),
+        (50.286631,29.270694),(50.286298,29.270476),(50.285906,29.270077),(50.285590,29.269811),
+        (50.285326,29.269562),(50.284895,29.269310),(50.284224,29.268935),(50.283643,29.268451),
+        (50.283532,29.268264),(50.283665,29.268005),(50.283892,29.267617),(50.284381,29.267288),
+        (50.285631,29.266097),(50.285852,29.265729),(50.286049,29.265255),(50.286458,29.264264),
+        (50.286974,29.263853),(50.287657,29.263437),(50.288160,29.263077),(50.289062,29.261978),
+        (50.289631,29.261788),(50.290107,29.261892),(50.290637,29.261830),(50.291590,29.261181),
+        (50.292182,29.260916),(50.292548,29.260650),(50.292851,29.260225),(50.293303,29.259153),
+        (50.293687,29.258063),(50.293938,29.257616),(50.294227,29.257212),(50.294438,29.256693),
+        (50.295179,29.255393),(50.295445,29.254888),(50.295774,29.254331),(50.296349,29.253521),
+        (50.296987,29.252543),(50.297255,29.252046),(50.297486,29.251491),(50.297421,29.250623),
+        (50.297351,29.249315),(50.297344,29.248951),(50.297416,29.248709),(50.297505,29.248212),
+        (50.297489,29.247482),(50.297609,29.246892),(50.297681,29.245877),(50.297818,29.245032),
+        (50.297962,29.244550),(50.298048,29.244261),(50.298134,29.243971),(50.298205,29.243729),
+        (50.298466,29.243428),(50.298538,29.243187),(50.298788,29.242111),(50.298976,29.241435),
+        (50.299096,29.241003),(50.299202,29.240571),(50.299348,29.239999),(50.299546,29.239287),
+        (50.299890,29.238662),(50.300382,29.237962),(50.300684,29.237523),(50.301150,29.236557),
+        (50.301532,29.235875),(50.302156,29.234543),(50.302294,29.234070),(50.302409,29.233889),
+        (50.302652,29.233477),(50.302940,29.232922),(50.303290,29.232170),(50.303472,29.231624),
+        (50.303779,29.230978),(50.304135,29.230181),(50.304654,29.229025),(50.304805,29.228605),
+        (50.305014,29.227954),(50.305772,29.226403),(50.306254,29.225031),(50.306418,29.224427),
+        (50.306727,29.223140),(50.306774,29.221700),(50.306740,29.220693),(50.306890,29.220174),
+        (50.307135,29.219192),(50.307218,29.218881),(50.307366,29.218368),(50.307573,29.217687),
+        (50.308024,29.216954),(50.308630,29.216144),(50.308975,29.215318),(50.309920,29.214064),
+        (50.310457,29.213266),(50.311444,29.211816),(50.312359,29.210933),(50.313036,29.210234),
+        (50.313614,29.209818),(50.314341,29.209574),(50.314776,29.209382),(50.315664,29.208882),
+        (50.316869,29.208254),(50.317838,29.208192),(50.318454,29.208206),(50.319107,29.208288),
+        (50.320147,29.208528),(50.321643,29.209034),(50.323227,29.209893),(50.323962,29.210058),
+        (50.325721,29.211213),(50.326980,29.212475),(50.327427,29.213172),(50.328404,29.214410),
+        (50.329264,29.215684),(50.329289,29.215843),(50.329504,29.217063),(50.329503,29.217414),
+        (50.329074,29.218700),(50.328956,29.219236),(50.328336,29.220083),(50.327481,29.220932),
+        (50.327010,29.221226),(50.326672,29.221493),(50.325702,29.222442),(50.325300,29.222828),
+        (50.325056,29.222915),(50.324856,29.223108),(50.324608,29.223411),(50.324437,29.224706),
+        (50.324515,29.226091),(50.324545,29.226682),(50.324493,29.227316),(50.324565,29.228326),
+        (50.324127,29.229987),(50.323788,29.230948),(50.323655,29.231409),(50.323644,29.231895),
+        (50.323117,29.233429),(50.323022,29.233738),(50.322950,29.234697),(50.323122,29.235319),
+        (50.323147,29.235923),(50.323268,29.236974),(50.323633,29.237641),(50.323848,29.237847),
+        (50.324387,29.239067),(50.324380,29.239288),(50.324282,29.239601),(50.324673,29.241241),
+        (50.324603,29.241997),(50.324492,29.242680),(50.324664,29.244272),(50.324965,29.245064),
+        (50.325466,29.245957),(50.326404,29.247346),(50.326797,29.248167),(50.327707,29.249053),
+        (50.328076,29.249478),(50.328535,29.250492),(50.328894,29.251372),(50.329435,29.252413),
+        (50.330273,29.253821),(50.330731,29.255660),(50.331129,29.256279),(50.332144,29.257579),
+        (50.332705,29.257894),(50.333191,29.258251),(50.333577,29.258467),(50.333741,29.258685),
+        (50.333891,29.258958),(50.334354,29.259492),(50.334584,29.259962),(50.334765,29.260361),
+        (50.334862,29.260564),(50.335203,29.261012),(50.332952,29.262433),
+    ]
+
+    def _in_polygon(lon, lat, poly):
+        """Ray-casting point-in-polygon test (Jordan curve theorem)."""
+        n, inside = len(poly), False
+        j = n - 1
+        for i in range(n):
+            xi, yi = poly[i]
+            xj, yj = poly[j]
+            if ((yi > lat) != (yj > lat)) and (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi):
+                inside = not inside
+            j = i
+        return inside
+
+    def _poly_bbox(poly):
+        lons = [p[0] for p in poly]
+        lats = [p[1] for p in poly]
+        return min(lons), max(lons), min(lats), max(lats)
+
+    POLY_LON_MIN, POLY_LON_MAX, POLY_LAT_MIN, POLY_LAT_MAX = _poly_bbox(KHARG_POLY)
+
+    def _cep_scatter(lon, lat, cep_m, rng_):
+        sigma = cep_m / 1.1774
+        u1 = max(rng_.random(), 1e-10)
+        u2 = rng_.random()
+        z0 = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)
+        z1 = math.sqrt(-2 * math.log(u1)) * math.sin(2 * math.pi * u2)
+        clat = math.cos(math.radians(lat))
+        return lon + z0 * sigma / (111_000 * clat), lat + z1 * sigma / 111_000
+
+    def _ts(t_s):
+        return fmt_time(sim_time(t_s))
+
+    def _tspan(b, e):
+        return f"<TimeSpan><begin>{_ts(b)}</begin><end>{_ts(e)}</end></TimeSpan>"
+
+    def _pm_point(name, lon, lat, style_id, desc="", ts_b=None, ts_e=None):
+        ts = _tspan(ts_b, ts_e) if ts_b is not None else ""
+        return (f'  <Placemark><name>{name}</name>'
+                f'<description><![CDATA[{desc}]]></description>'
+                f'<styleUrl>#{style_id}</styleUrl>{ts}'
+                f'<Point><coordinates>{lon:.6f},{lat:.6f},0</coordinates>'
+                f'</Point></Placemark>\n')
+
+    def _pm_line(name, pts, style_id, ts_b, ts_e, alt=300, n_segs=100):
+        """LineString placemark with n_segs interpolated segments for smooth animation."""
+        if n_segs > 1 and len(pts) == 2:
+            (lo1, la1), (lo2, la2) = pts
+            pts = [(lo1 + (lo2 - lo1) * i / n_segs,
+                    la1 + (la2 - la1) * i / n_segs)
+                   for i in range(n_segs + 1)]
+        coords = " ".join(f"{lo:.5f},{la:.5f},{alt}" for lo, la in pts)
+        return (f'  <Placemark><name>{name}</name>'
+                f'<styleUrl>#{style_id}</styleUrl>'
+                f'{_tspan(ts_b, ts_e)}'
+                f'<LineString><altitudeMode>relativeToGround</altitudeMode>'
+                f'<coordinates>{coords}</coordinates>'
+                f'</LineString></Placemark>\n')
+
+    def _ship_offset(idx, n, base_lon, base_lat, spread=0.006):
+        angle = 2 * math.pi * idx / max(n, 1)
+        return base_lon + spread * math.sin(angle), base_lat + spread * math.cos(angle)
+
+    def _helo_arc_pts(lon1, lat1, lon2, lat2, cruise_m, n_pts=14):
+        """NOE helicopter altitude profile for gx:Track (relativeToGround).
+
+        Profile: ramp from 15 m (deck/hover) up to cruise_m over first 12% of
+        flight, hold cruise, then descend to 15 m over final 12%.
+        Realistic for rotary-wing NOE approach to an opposed landing zone.
+        """
+        pts = []
+        for i in range(n_pts + 1):
+            t = i / n_pts
+            lon, lat = gc_interp(lon1, lat1, lon2, lat2, t)
+            if t <= 0.12:
+                alt = 15.0 + (cruise_m - 15.0) * (t / 0.12)
+            elif t >= 0.88:
+                alt = 15.0 + (cruise_m - 15.0) * ((1.0 - t) / 0.12)
+            else:
+                alt = cruise_m
+            pts.append((lon, lat, alt))
+        return pts
+
+    def _jet_arc_pts(lon1, lat1, lon2, lat2, cruise_m=6_000, n_pts=14):
+        """High-altitude jet strike altitude profile for gx:Track (relativeToGround).
+
+        Profile: ramp from 50 m (deck launch / STOVL rotation) to cruise_m over
+        the first 8% of flight, hold cruise, then descend to 300 m over the final
+        10% for weapon-delivery pass.  Realistic for F-35B STOVL low-observable
+        strike profile (no afterburner on transit; weapon-release above threat WEZ).
+        """
+        pts = []
+        for i in range(n_pts + 1):
+            t = i / n_pts
+            lon, lat = gc_interp(lon1, lat1, lon2, lat2, t)
+            if t <= 0.08:
+                alt = 50.0 + (cruise_m - 50.0) * (t / 0.08)
+            elif t >= 0.90:
+                alt = 300.0 + (cruise_m - 300.0) * ((1.0 - t) / 0.10)
+            else:
+                alt = float(cruise_m)
+            pts.append((lon, lat, alt))
+        return pts
+
+    def _circle_kml_pts(clon, clat, radius_km, n_pts=72):
+        """Return KML coordinate string approximating a ground-level circle polygon."""
+        clat_r = math.cos(math.radians(clat))
+        coords = []
+        for i in range(n_pts + 1):
+            angle = 2 * math.pi * i / n_pts
+            dlon = radius_km / (111.0 * clat_r) * math.sin(angle)
+            dlat = radius_km / 111.0 * math.cos(angle)
+            coords.append(f"{clon + dlon:.6f},{clat + dlat:.6f},0")
+        return " ".join(coords)
+
+    # ── Timing ────────────────────────────────────────────────────────────────
+    T_MV22 = _flt_s(LHA_LON, LHA_LAT, LZ1_LON, LZ1_LAT, MV22_KMH)   # ≈484 s
+    T_CH53 = _flt_s(LHA_LON, LHA_LAT, LZ1_LON, LZ1_LAT, CH53_KMH)   # ≈777 s
+    T_AH1Z  = _flt_s(DDG_LON, DDG_LAT, LZ1_LON, LZ1_LAT, AH1Z_KMH)
+    T_F35B  = _flt_s(LHA_LON, LHA_LAT, KHARG_LON, KHARG_LAT, F35B_KMH)
+    # SEAD standoff fire point: 60% of the way from LHA to Kharg (~36 km south)
+    # AGM-88E range is 150+ km so this gives massive margin; keeps F-35B outside
+    # the HQ-2/HAWK 40 km engagement envelope during the fire run.
+    F35B_SEAD_FIRE_LON = LHA_LON + (KHARG_LON - LHA_LON) * 0.60
+    F35B_SEAD_FIRE_LAT = LHA_LAT + (KHARG_LAT - LHA_LAT) * 0.60
+    T_F35B_TO_FIRE = _flt_s(LHA_LON, LHA_LAT,
+                             F35B_SEAD_FIRE_LON, F35B_SEAD_FIRE_LAT, F35B_KMH)
+    WAVE_CYCLE_S  = T_MV22 + UNLOAD_S + T_MV22 + RELOAD_S             # ≈1448 s
+    wave_depart_s = [w * WAVE_CYCLE_S for w in range(N_WAVES)]
+    wave_arrive_s = [d + T_MV22 for d in wave_depart_s]
+    wave_return_s = [d + T_MV22 + UNLOAD_S + T_MV22 for d in wave_depart_s]
+    last_arrive_s = wave_arrive_s[-1]
+    SIM_END_S     = last_arrive_s + 7_200   # 2 h after final wave
+
+    # ── Generate fireteam positions uniformly inside Kharg Island polygon ────────
+    # Rejection sampling within the polygon bounding box.
+    # Each wave's fireteams land and disperse within the polygon.
+    sq_rng = _random.Random(SQ_SEED)
+    squads_per_wave = [TROOPS_PER_WAVE // MARINES_PER_SQUAD] * FULL_WAVES
+    if REMAINDER:
+        squads_per_wave.append(REMAINDER // MARINES_PER_SQUAD)
+
+    def _rand_in_polygon(rng, poly, lon_min, lon_max, lat_min, lat_max, max_tries=500):
+        for _ in range(max_tries):
+            lon = rng.uniform(lon_min, lon_max)
+            lat = rng.uniform(lat_min, lat_max)
+            if _in_polygon(lon, lat, poly):
+                return lon, lat
+        return (lon_min + lon_max) / 2, (lat_min + lat_max) / 2  # fallback to centroid
+
+    # For SE variant: restrict placement to southern+eastern portions of the polygon
+    place_lon_min = PLACE_LON_MIN if PLACE_LON_MIN is not None else POLY_LON_MIN
+    place_lat_max = PLACE_LAT_MAX if PLACE_LAT_MAX is not None else POLY_LAT_MAX
+
+    squad_pos = []   # (lon, lat, wave_idx)
+    for w_idx, n_sq in enumerate(squads_per_wave):
+        for i in range(n_sq):
+            lon, lat = _rand_in_polygon(sq_rng, KHARG_POLY,
+                                        place_lon_min, POLY_LON_MAX,
+                                        POLY_LAT_MIN, place_lat_max)
+            squad_pos.append((lon, lat, w_idx))
+
+
+    # ── Generate IRGC defensive positions ────────────────────────────────────────
+    # 1,000 soldiers distributed inside the island polygon; 10% (100) carry MANPADS.
+    N_IRGC           = 1_000
+    IRGC_MP_FRAC      = 0.10
+    N_IRGC_MP         = int(N_IRGC * IRGC_MP_FRAC)          # 100 MANPADS teams
+    IRGC_MP_RNG_KM    = 4.0   # km — Misagh-2 (Iranian Stinger clone) effective range
+
+    irgc_rng = _random.Random(55)
+    irgc_pos = []   # (lon, lat, has_manpads)
+    for _ii in range(N_IRGC):
+        _lon, _lat = _rand_in_polygon(irgc_rng, KHARG_POLY,
+                                      POLY_LON_MIN, POLY_LON_MAX,
+                                      POLY_LAT_MIN, POLY_LAT_MAX)
+        irgc_pos.append((_lon, _lat, _ii < N_IRGC_MP))
+
+    # ── Generate 1,000 Shahed-136 drone waves ─────────────────────────────────
+    # 5 waves from multiple Iranian launch sites, 7 min after last Marines ashore.
+    # 5% are AI/computer-vision guided (AI_SHAHED_FRACTION) → guaranteed kills.
+    # 95% standard → FIM-92 Stinger MANPADS intercept roll (Pk 70%).
+    drone_rng   = _random.Random(77)
+    # Drones launch immediately when first Marines touch down (T+0 of wave 1 arrival)
+    BASE_LAUNCH = wave_arrive_s[0]
+
+    # Iranian launch sites with (lon, lat, weight) for weighted selection
+    D_SITES = [
+        (50.843, 28.923, 0.35, "Bushehr AB"),        # very close — 82 km
+        (54.332, 27.684, 0.25, "Lar Airbase"),        # 180 km
+        (55.937, 26.783, 0.20, "Qeshm Island"),       # 280 km
+        (56.375, 27.188, 0.12, "Bandar Abbas"),       # 260 km
+        (57.798, 25.640, 0.08, "Jask Base"),          # 360 km
+    ]
+    _sw_acc, _site_cw = 0.0, []
+    for *_, sw, _sn in D_SITES:
+        _sw_acc += sw
+        _site_cw.append(_sw_acc)
+
+    def _pick_site():
+        r = drone_rng.random()
+        for i, cw in enumerate(_site_cw):
+            if r <= cw:
+                return D_SITES[i]
+        return D_SITES[-1]
+
+    # 2,000 drones in 5 escalating waves: 300 / 400 / 500 / 400 / 400
+    DRONE_WAVES = [
+        (0,     300, "α"),
+        (1800,  400, "β"),
+        (3600,  500, "γ"),
+        (5400,  400, "δ"),
+        (7200,  400, "ε"),
+    ]
+
+    # Weighted target clusters on Kharg Island
+    D_TARGETS = [
+        (LZ1_LON, LZ1_LAT,  0.30),   # airstrip — high priority
+        (50.308,  29.275,   0.20),   # oil terminal
+        (50.330,  29.265,   0.20),   # central
+        (LZ2_LON, LZ2_LAT,  0.15),   # LZ EAGLE
+        (50.320,  29.235,   0.15),   # south perimeter
+    ]
+    _tw_acc, _tgt_cw = 0.0, []
+    for *_, tw in D_TARGETS:
+        _tw_acc += tw
+        _tgt_cw.append(_tw_acc)
+
+    def _pick_tgt():
+        r = drone_rng.random()
+        for i, cw in enumerate(_tgt_cw):
+            if r <= cw:
+                return D_TARGETS[i][:2]
+        return D_TARGETS[-1][:2]
+
+    all_drones     = []
+    stinger_rounds = STINGER_MAG   # magazine counter — depletes as rounds are fired
+    for wave_off, n_d, wave_lbl in DRONE_WAVES:
+        for d in range(n_d):
+            site_info = _pick_site()
+            s_lon, s_lat = site_info[0], site_info[1]
+            site_name    = site_info[3]
+            tlon, tlat   = _pick_tgt()
+            imp_lon, imp_lat = _cep_scatter(tlon, tlat, SHAHED_CEP_M, drone_rng)
+
+            # 5% AI-guided: guaranteed breakthrough, tighter scatter, two-phase path
+            is_ai    = drone_rng.random() < AI_SHAHED_FRACTION
+            launch_s = BASE_LAUNCH + wave_off + d * 8   # 8-s stagger within wave
+
+            full_dist_km = _dist_km(s_lon, s_lat, imp_lon, imp_lat)
+            flight_s     = full_dist_km / SHAHED_SPD_KS
+
+            if is_ai:
+                # AI terminal target — small ±0.01° extra scatter for visual variety
+                ai_tgt_lon = imp_lon + drone_rng.uniform(-0.01, 0.01)
+                ai_tgt_lat = imp_lat + drone_rng.uniform(-0.01, 0.01)
+                lock_frac  = max(0.05, 1.0 - SHAHED_AI_LOCK_KM / max(full_dist_km, SHAHED_AI_LOCK_KM + 1))
+                is_int     = False          # AI always breaks through
+                int_lon, int_lat, int_s = None, None, None
+                stinger_expended = False
+            else:
+                ai_tgt_lon = ai_tgt_lat = None
+                lock_frac  = None
+                # Stinger engages at STINGER_RNG km — magazine-limited
+                if stinger_rounds > 0:
+                    stinger_rounds -= 1
+                    stinger_expended = True
+                    if full_dist_km > STINGER_RNG:
+                        int_frac = 1.0 - STINGER_RNG / full_dist_km
+                        int_frac = min(int_frac, 0.97)
+                    else:
+                        int_frac = 0.50
+                    is_int = drone_rng.random() < STINGER_PK
+                else:
+                    stinger_expended = False
+                    is_int = False   # no rounds left — drone passes uncontested
+                if is_int:
+                    int_f   = int_frac + drone_rng.uniform(-0.03, 0.03)
+                    int_lon = s_lon + (imp_lon - s_lon) * int_f
+                    int_lat = s_lat + (imp_lat - s_lat) * int_f
+                    int_s   = launch_s + flight_s * int_f
+                else:
+                    int_lon = int_lat = int_s = None
+
+            impact_s = launch_s + flight_s
+
+            all_drones.append({
+                'launch_s':  launch_s,   'impact_s':  impact_s,
+                'imp_lon':   imp_lon,    'imp_lat':   imp_lat,
+                'src_lon':   s_lon,      'src_lat':   s_lat,
+                'site_name': site_name,
+                'dist_km':   full_dist_km,
+                'flight_s':  flight_s,
+                'is_ai':     is_ai,
+                'ai_tgt_lon': ai_tgt_lon, 'ai_tgt_lat': ai_tgt_lat,
+                'lock_frac': lock_frac,
+                'is_int':    is_int,
+                'stinger_fired': stinger_expended,
+                'int_lon':   int_lon,    'int_lat':   int_lat,
+                'int_s':     int_s,
+                'wave':      wave_lbl,   'idx':       d + 1,
+            })
+
+    # ── Pre-compute helicopter sortie schedule ─────────────────────────────────
+    # Track which helos are active and when, so AI drones can engage them.
+    # Each entry: (helo_id, type, wave, dep_s, arr_s, mid_lon, mid_lat)
+    helo_schedule = []    # all sorties for all helos
+    helo_ids_mv22 = [f"MV22-{i+1}" for i in range(N_MV22)]
+    helo_ids_ch53 = [f"CH53-{i+1}" for i in range(N_CH53)]
+    helo_ids_ah1z = [f"AH1Z-{i+1}" for i in range(N_AH1Z)]
+    all_helo_ids  = helo_ids_mv22 + helo_ids_ch53 + helo_ids_ah1z
+
+    for w in range(N_WAVES):
+        wave_start_s = wave_depart_s[w]
+        arrive_lz_s  = wave_arrive_s[w]
+        tlon = LZ1_LON if w % 2 == 0 else LZ2_LON
+        tlat = LZ1_LAT if w % 2 == 0 else LZ2_LAT
+        n_mv22_w = N_MV22 if w < FULL_WAVES else max(1, round(N_MV22 * REMAINDER / TROOPS_PER_WAVE))
+        n_ch53_w = N_CH53 if w < FULL_WAVES else max(1, round(N_CH53 * REMAINDER / TROOPS_PER_WAVE))
+        for i in range(n_mv22_w):
+            slon, slat = _ship_offset(i, n_mv22_w, LHA_LON, LHA_LAT, 0.007)
+            stag = i * 20
+            dep_s = wave_start_s + stag
+            arr_s = dep_s + T_MV22
+            mid_lon = (slon + tlon) / 2
+            mid_lat = (slat + tlat) / 2
+            helo_schedule.append((helo_ids_mv22[i], "MV-22B", w, dep_s, arr_s, mid_lon, mid_lat))
+        for i in range(n_ch53_w):
+            ch53_src = [(LHA_LON, LHA_LAT), (LHA_LON, LHA_LAT), (LPD1_LON, LPD1_LAT), (LPD2_LON, LPD2_LAT)]
+            blon, blat = ch53_src[i % len(ch53_src)]
+            slon, slat = _ship_offset(i, n_ch53_w, blon, blat, 0.005)
+            stag = i * 30
+            dep_s = wave_start_s + stag
+            arr_s = dep_s + _flt_s(slon, slat, LZ1_LON, LZ1_LAT, CH53_KMH)
+            mid_lon = (slon + LZ1_LON) / 2
+            mid_lat = (slat + LZ1_LAT) / 2
+            helo_schedule.append((helo_ids_ch53[i], "CH-53E", w, dep_s, arr_s, mid_lon, mid_lat))
+        for i in range(N_AH1Z):
+            slon, slat = _ship_offset(i, N_AH1Z, DDG_LON, DDG_LAT, 0.004)
+            dep_s  = wave_start_s
+            arr_s  = dep_s + T_AH1Z
+            mid_lon = (slon + LZ1_LON) / 2
+            mid_lat = (slat + LZ1_LAT) / 2
+            helo_schedule.append((helo_ids_ah1z[i], "AH-1Z", w, dep_s, arr_s, mid_lon, mid_lat))
+
+    # ── AI drone vs. helicopter engagement ────────────────────────────────────
+    # For each AI breakthrough drone, check if any helicopter is in its outbound
+    # leg at impact time and within HELO_KILL_KM of the drone's terminal path.
+    # If so: 50% Pk.  A downed helicopter is removed from all subsequent waves.
+    helo_rng     = _random.Random(55)
+    downed_helos = set()           # helo_ids of destroyed aircraft
+    helo_kill_events = []          # [(helo_id, type, wave_idx, kill_time_s, drone_wave)]
+
+    for drone in sorted(all_drones, key=lambda d: d['impact_s']):
+        if not drone['is_ai'] or drone['is_int']:
+            continue
+        imp_lon_d = drone['ai_tgt_lon']
+        imp_lat_d = drone['ai_tgt_lat']
+        imp_t     = drone['impact_s']
+        # Check all helos in outbound leg at impact time
+        for helo_id, helo_type, helo_wave, dep_s, arr_s, mid_lon, mid_lat in helo_schedule:
+            if helo_id in downed_helos:
+                continue   # already shot down
+            if not (dep_s <= imp_t <= arr_s):
+                continue   # not in the air at this moment
+            # Interpolate helo position at imp_t
+            frac     = (imp_t - dep_s) / max(arr_s - dep_s, 1)
+            tlon_h   = LZ1_LON if helo_wave % 2 == 0 else LZ2_LON
+            tlat_h   = LZ1_LAT if helo_wave % 2 == 0 else LZ2_LAT
+            h_lon = mid_lon - (1 - frac) * (mid_lon - LHA_LON) + frac * (tlon_h - mid_lon)
+            h_lat = mid_lat - (1 - frac) * (mid_lat - LHA_LAT) + frac * (tlat_h - mid_lat)
+            dist_km_hd = _dist_km(imp_lon_d, imp_lat_d, h_lon, h_lat)
+            if dist_km_hd <= HELO_KILL_KM:
+                if helo_rng.random() < 0.50:   # 50% Pk: AI drone kills helicopter
+                    downed_helos.add(helo_id)
+                    helo_kill_events.append((helo_id, helo_type, helo_wave, imp_t, drone['wave']))
+                    break   # one drone downs one helicopter
+
+    # ── IRGC Misagh-2 MANPADS vs. helicopter engagement ──────────────────────
+    # Misagh-2 = Iranian FIM-92 Stinger analog (IR-guided, 4 km range, 4.5 km ceiling).
+    # Pre-assault F-35B SEAD/CAS and AH-1Z escort suppress most teams, but the
+    # remainder actively engage incoming helos on every approach leg.
+    #
+    # Pk calibration (IR MANPADS vs. rotary-wing — open-source assessments):
+    #   MV-22B Osprey:       0.18  (fast 446 km/h tiltrotor; limited flare dispenser)
+    #   CH-53E Super Stallion: 0.28  (large 278 km/h heavy-lift; high IR signature)
+    #   AH-1Z Viper:         0.22  (armed escort; AN/AAR-47 MAWS but no towed decoy)
+    # Sources: RAND MR-1078; Jane's Surface-to-Air Missiles 2024; DoD ATEC 2023
+    MISAGH_PK_TYPE   = {'MV-22B': 0.18, 'CH-53E': 0.28, 'AH-1Z': 0.22}
+    MISAGH_SPEED_KMH = 2_000    # ~Mach 1.8 IR pursuit (Misagh-2 spec)
+    MISAGH_PER_TEAM  = 2        # pre-positioned missiles per team
+    MISAGH_SEAD_SURV = 0.70     # fraction surviving SEAD (30% neutralised pre-assault)
+    MISAGH_RETALIATE = 0.70     # prob. AH-1Z/CAS destroys team after it fires
+
+    misagh_rng = _random.Random(87)
+
+    # Build active MANPADS pool after SEAD suppression
+    mp_remaining = {}   # {irgc_pos_idx: missiles_left}
+    for _mi, (_mlon, _mlat, _hmp) in enumerate(irgc_pos):
+        if not _hmp:
+            continue
+        if misagh_rng.random() < MISAGH_SEAD_SURV:
+            mp_remaining[_mi] = MISAGH_PER_TEAM
+
+    misagh_events = []   # engagement records → KML + stats
+
+    # Process helo sorties in chronological departure order
+    for helo_id, helo_type, helo_wave, dep_s, arr_s, mid_lon, mid_lat in sorted(
+            helo_schedule, key=lambda x: x[3]):
+        if helo_id in downed_helos:
+            continue  # already killed by drone strike
+
+        # Engagement point: 75% along the outbound leg (inside the island WEZ)
+        eng_frac = 0.75
+        tlon_h   = LZ1_LON if helo_wave % 2 == 0 else LZ2_LON
+        tlat_h   = LZ1_LAT if helo_wave % 2 == 0 else LZ2_LAT
+        eng_t    = dep_s + (arr_s - dep_s) * eng_frac
+        h_lon    = LHA_LON + (tlon_h - LHA_LON) * eng_frac
+        h_lat    = LHA_LAT + (tlat_h - LHA_LAT) * eng_frac
+
+        # Select closest active MANPADS team within range
+        best_idx, best_d = None, IRGC_MP_RNG_KM + 1.0
+        for _mi, _mleft in mp_remaining.items():
+            if _mleft <= 0:
+                continue
+            _mlon, _mlat, _ = irgc_pos[_mi]
+            _d = _dist_km(_mlon, _mlat, h_lon, h_lat)
+            if _d <= IRGC_MP_RNG_KM and _d < best_d:
+                best_d, best_idx = _d, _mi
+
+        if best_idx is None:
+            continue  # no rounds in range
+
+        # Expend one missile; compute intercept
+        mp_remaining[best_idx] -= 1
+        mp_lon, mp_lat, _ = irgc_pos[best_idx]
+        pk    = MISAGH_PK_TYPE.get(helo_type, 0.20)
+        hit   = misagh_rng.random() < pk
+        flt_s = best_d / MISAGH_SPEED_KMH * 3_600
+        kill_t = eng_t + flt_s
+
+        misagh_events.append({
+            'helo_id':  helo_id,   'helo_type': helo_type,
+            'wave':     helo_wave, 'eng_t':     eng_t,
+            'kill_t':   kill_t,
+            'mp_lon':   mp_lon,    'mp_lat':    mp_lat,
+            'h_lon':    h_lon,     'h_lat':     h_lat,
+            'dist_km':  best_d,    'hit':       hit,
+        })
+
+        if hit:
+            downed_helos.add(helo_id)
+            # AH-1Z escort identifies launch flash and retaliates
+            if misagh_rng.random() < MISAGH_RETALIATE:
+                mp_remaining[best_idx] = 0   # team destroyed
+
+    misagh_shots  = len(misagh_events)
+    misagh_hits   = sum(1 for e in misagh_events if e['hit'])
+    misagh_misses = misagh_shots - misagh_hits
+
+    # ── Compute actual troops delivered accounting for lost helicopters ────────
+    # Surviving helicopter capacity per type
+    mv22_surviving = [h for h in helo_ids_mv22 if h not in downed_helos]
+    ch53_surviving = [h for h in helo_ids_ch53 if h not in downed_helos]
+    # Recalculate effective troops per wave (post-shootdown)
+    wave_troops_actual = []
+    for w in range(N_WAVES):
+        n_mv22_w = sum(1 for h in mv22_surviving if int(h.split('-')[1]) - 1 < N_MV22)
+        n_ch53_w = sum(1 for h in ch53_surviving if int(h.split('-')[1]) - 1 < N_CH53)
+        troops = n_mv22_w * MV22_TROOPS + n_ch53_w * CH53_TROOPS
+        if w == FULL_WAVES:   # last (partial) wave
+            troops = min(troops, REMAINDER)
+        wave_troops_actual.append(troops)
+    total_marines_actual = min(TOTAL_MARINES, sum(wave_troops_actual))
+    n_helos_lost = len(downed_helos)
+    marines_not_delivered = TOTAL_MARINES - total_marines_actual
+
+    # ── Simulate impacts: apply HP damage to squads ───────────────────────────
+    # Only breakthroughs (not intercepted) damage squads.
+    # AI drones are guaranteed hits — select nearest squad as instant kill.
+    squad_hp     = [SQUAD_HP] * N_SQUADS
+    squad_events = [[] for _ in range(N_SQUADS)]   # [(time_s, hp_after)]
+
+    for drone in sorted(all_drones, key=lambda d: d['impact_s']):
+        if drone['is_int']:
+            continue   # intercepted — no ground effect
+        imp_s   = drone['impact_s']
+        imp_lon = drone['ai_tgt_lon'] if drone['is_ai'] else drone['imp_lon']
+        imp_lat = drone['ai_tgt_lat'] if drone['is_ai'] else drone['imp_lat']
+        best_dm, best_si = float('inf'), -1
+        for si, (sq_lon, sq_lat, sq_wave) in enumerate(squad_pos):
+            if squad_hp[si] <= 0 or wave_arrive_s[sq_wave] > imp_s:
+                continue
+            dm = _dist_m(imp_lon, imp_lat, sq_lon, sq_lat)
+            if drone['is_ai'] and dm < best_dm:
+                best_dm, best_si = dm, si
+            elif not drone['is_ai']:
+                if   dm <= KILL_M:  dmg = squad_hp[si]
+                elif dm <= DMG2_M:  dmg = 2
+                elif dm <= DMG1_M:  dmg = 1
+                else:               continue
+                squad_hp[si] = max(0, squad_hp[si] - dmg)
+                squad_events[si].append((imp_s, squad_hp[si]))
+        if drone['is_ai'] and best_si >= 0:
+            squad_hp[best_si] = 0   # guaranteed kill
+            squad_events[best_si].append((imp_s, 0))
+
+    # ── Outcome tallies ────────────────────────────────────────────────────────
+    n_launched    = len(all_drones)
+    n_intercepted = sum(1 for d in all_drones if d['is_int'])
+    n_ai          = sum(1 for d in all_drones if d['is_ai'])
+    n_bt          = n_launched - n_intercepted
+    stinger_fired = sum(1 for d in all_drones if d['stinger_fired'])
+    stinger_hits  = n_intercepted
+    n_killed      = sum(1 for hp in squad_hp if hp == 0)
+    n_damaged     = sum(1 for hp in squad_hp if 0 < hp < SQUAD_HP)
+    n_intact      = N_SQUADS - n_killed - n_damaged
+    hp_lost       = sum(SQUAD_HP - hp for hp in squad_hp)
+    # KIA = fully destroyed squads × squad size; WIA = partial HP losses
+    kia_total     = n_killed * MARINES_PER_SQUAD
+    wia_total     = hp_lost - kia_total
+
+    # ── Random walk positions for fireteams ────────────────────────────────────
+    # Each fireteam moves in small Gaussian steps every 5 min after landing.
+    WALK_STEP_S  = 300        # 5-minute walk interval
+    WALK_SIGMA_M = 22         # ~22 m sigma per step (≈ infantry tactical bound)
+    walk_rng = _random.Random(123)
+    squad_walk = []           # squad_walk[si] = [(lon, lat, t_start_s), ...]
+    for si, (lon0, lat0, w_idx) in enumerate(squad_pos):
+        land_s  = wave_arrive_s[w_idx]
+        lon, lat = lon0, lat0
+        steps   = []
+        t       = land_s
+        while t <= SIM_END_S:
+            steps.append((lon, lat, t))
+            # Small Gaussian step, bounded within Kharg Island
+            dlon = walk_rng.gauss(0, WALK_SIGMA_M) / (111_000 * math.cos(math.radians(lat)))
+            dlat = walk_rng.gauss(0, WALK_SIGMA_M) / 111_000
+            lon  = max(50.282, min(50.365, lon + dlon))
+            lat  = max(29.215, min(29.300, lat + dlat))
+            t   += WALK_STEP_S
+        squad_walk.append(steps)
+
+    # ── Lanchester square-law ground battle simulation ─────────────────────────
+    # Marines (F) vs. IRGC defenders (B) beginning when first wave arrives.
+    # Square law: dF/dt = -β × B,  dB/dt = -α × F  (α > β: Marines more effective)
+    #
+    # Historical exchange ratio calibration (enemy KIA per USMC KIA):
+    #   - 2nd Battle of Fallujah 2004 (urban assault vs. irregular): 12:1 – 21:1
+    #   - Hue City 1968 (urban vs. NVA regulars, similar to IRGC tier): 26:1 southern sector
+    #   - Battle of al-Khafji 1991 (USMC vs. Iraqi regulars, defensive posture): 3:1 – 7:1
+    #   - Dupuy QJM historical mean (US vs. Middle-Eastern regular military): ~5:1
+    #
+    # IRGC on Kharg Island are REGULAR infantry (trained), in DEFENSIVE positions,
+    # on home terrain → use al-Khafji / Dupuy midpoint: α/β = 5:1.
+    # In Lanchester square law the exchange ratio equals (α/β)² × (B₀/F₀) at equal
+    # starting numbers, so α/β ≈ 5 gives a ~5:1 attrition coefficient advantage.
+    # Sources: Dupuy Institute (2018); RAND MG-1104; Helmbold (1993); Wikipedia
+    #          Battle of al-Khafji; Second Battle of Fallujah.
+    IRGC_START   = 1_300       # effective IRGC combatants (1000 + 300 weighted Basij)
+    USMC_START   = TOTAL_MARINES - kia_total   # surviving Marines after drone strikes
+    NAVY_RESERVE = 2_500       # LHA-7 ship's company / ARG Navy personnel, armed as reserve
+    # Navy effectiveness: non-infantry, ~2× IRGC (lower than Marines but motivated, armed)
+    ALPHA_M      = 1.25e-4     # Marine effectiveness (kills per Marine per second) — 5× IRGC
+    ALPHA_N      = 5.0e-5      # Navy reserve effectiveness — 2× IRGC
+    BETA_I       = 2.5e-5      # IRGC effectiveness   (kills per IRGC per second)
+    #   α/β = 1.25e-4 / 2.5e-5 = 5.0 — calibrated to Dupuy/al-Khafji median
+    LANC_STEP_S  = 300         # 5-minute simulation step
+    lanc_states  = []          # [(t_s, marines, irgc, navy_active)]
+    navy_committed = False     # Navy reserve only enters when Marines are exhausted
+    lF, lB       = float(USMC_START), float(IRGC_START)
+    lN           = float(NAVY_RESERVE)
+    lt           = last_arrive_s   # combat begins once all Marines ashore
+    while (lF > 1 or (navy_committed and lN > 1)) and lB > 1:
+        lanc_states.append((lt, round(lF), round(lB), navy_committed))
+        # If Marines depleted, commit Navy reserve
+        if lF < 1 and not navy_committed and lN > 1:
+            navy_committed = True
+        if navy_committed and lF < 1:
+            alpha_eff = ALPHA_N
+            fighters  = lN
+        else:
+            alpha_eff = ALPHA_M
+            fighters  = lF
+        dF = BETA_I * lB * LANC_STEP_S
+        dB = alpha_eff * fighters * LANC_STEP_S
+        if navy_committed and lF < 1:
+            lN = max(0.0, lN - dF)
+        else:
+            lF = max(0.0, lF - dF)
+        lB = max(0.0, lB - dB)
+        lt += LANC_STEP_S
+    # Append final (defeated) state
+    lanc_states.append((lt, round(lF), round(lB), navy_committed))
+    lanc_marine_final = round(lF)
+    lanc_navy_final   = round(lN)
+    lanc_irgc_final   = round(lB)
+    lanc_marine_cas   = USMC_START - lanc_marine_final   # ground combat casualties
+    lanc_navy_cas     = (NAVY_RESERVE - lanc_navy_final) if navy_committed else 0
+    lanc_irgc_cas     = IRGC_START - lanc_irgc_final
+
+    # ── KML build ─────────────────────────────────────────────────────────────
+    kml = []
+    kml.append(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<kml xmlns="http://www.opengis.net/kml/2.2"'
+        ' xmlns:gx="http://www.google.com/kml/ext/2.2">\n<Document>\n'
+        f'  <name>Kharg Island Assault — {SCENARIO_LABEL}</name>\n'
+        '  <description><![CDATA['
+        f'<b>Operation: Kharg Island — {SCENARIO_LABEL}</b><br/>'
+        f'22nd MEU — {TOTAL_MARINES:,} Marines in {N_WAVES} waves (LHA-7 USS Tripoli)<br/>'
+        f'Lift/wave: {TROOPS_PER_WAVE} Marines  |  Cycle: ~{WAVE_CYCLE_S/60:.0f} min  |  All ashore: T+{last_arrive_s/60:.0f} min<br/><br/>'
+        f'<b>Shahed-136 counterattack:</b> {n_launched:,} drones / 5 waves | {n_ai} AI-guided | {n_intercepted} intercepted (Stinger Pk={STINGER_PK*100:.0f}%)<br/>'
+        f'Kill radius: {KILL_M:.0f} m instant | {DMG2_M:.0f} m −2HP | {DMG1_M:.0f} m −1HP<br/>'
+        f'Drone casualties: <b>{kia_total} KIA / {wia_total} WIA</b><br/><br/>'
+        f'<b>{N_SQUADS} fireteam icons</b> (4 marines each, random path walk):<br/>'
+        '  Green=4HP  Yellow=3HP  Orange=1-2HP  Red=KIA<br/>'
+        '<b>Ground battle:</b> Lanchester square-law — Marines 5× more effective than IRGC<br/>'
+        f'Navy reserve: {NAVY_RESERVE:,} ship personnel commit if Marines eliminated (2× IRGC effectiveness)'
+        + (f'<br/><b style="color:orange">Navy reserve activated — Marines eliminated in ground battle</b>' if navy_committed else '')
+        + ']]></description>\n'
+    )
+
+    # Styles
+    kml.append(
+        # Ships / LZ / Iranian positions
+        '  <Style id="sty_ship"><IconStyle><color>ff00ffff</color><scale>1.3</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/sailing.png</href></Icon>'
+        '</IconStyle><LabelStyle><scale>0.8</scale></LabelStyle></Style>\n'
+        '  <Style id="sty_lz"><IconStyle><color>ff00ff00</color><scale>1.4</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/target.png</href></Icon>'
+        '</IconStyle><LabelStyle><scale>0.9</scale></LabelStyle></Style>\n'
+        '  <Style id="sty_iran"><IconStyle><color>ff0000ff</color><scale>1.1</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/caution.png</href></Icon>'
+        '</IconStyle><LabelStyle><scale>0.75</scale></LabelStyle></Style>\n'
+        '  <Style id="sty_marine"><IconStyle><color>ff00cc44</color><scale>1.4</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/flag.png</href></Icon>'
+        '</IconStyle><LabelStyle><scale>1.0</scale></LabelStyle></Style>\n'
+        # Sortie counter label
+        '  <Style id="sty_counter"><IconStyle><color>ff00ffff</color><scale>1.3</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/info-i.png</href></Icon>'
+        '</IconStyle><LabelStyle><color>ff00ffff</color><scale>1.1</scale></LabelStyle></Style>\n'
+        # Squad HP — gx:Track icons + trail (IconStyle + LineStyle for animated track)
+        '  <Style id="sq_full"><IconStyle><color>ff00ee00</color><scale>0.5</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon>'
+        '</IconStyle><LineStyle><color>aa00ee00</color><width>2</width></LineStyle>'
+        '<LabelStyle><scale>0.0</scale></LabelStyle></Style>\n'
+        '  <Style id="sq_lt"><IconStyle><color>ff00eeff</color><scale>0.5</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon>'
+        '</IconStyle><LineStyle><color>aa00eeff</color><width>2</width></LineStyle>'
+        '<LabelStyle><scale>0.5</scale></LabelStyle></Style>\n'
+        '  <Style id="sq_hvy"><IconStyle><color>ff0088ff</color><scale>0.5</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png</href></Icon>'
+        '</IconStyle><LineStyle><color>aa0088ff</color><width>2</width></LineStyle>'
+        '<LabelStyle><scale>0.5</scale></LabelStyle></Style>\n'
+        '  <Style id="sq_kia"><IconStyle><color>ff0000ff</color><scale>0.45</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_square.png</href></Icon>'
+        '</IconStyle><LineStyle><color>aa0000ff</color><width>1</width></LineStyle>'
+        '<LabelStyle><scale>0.45</scale></LabelStyle></Style>\n'
+        # Drone track + impact
+        '  <Style id="trk_drone"><LineStyle><color>cc4444ff</color><width>1</width></LineStyle></Style>\n'
+        '  <Style id="sty_boom"><IconStyle><color>ff0000ff</color><scale>1.0</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/target.png</href></Icon>'
+        '</IconStyle><LabelStyle><scale>0.4</scale></LabelStyle></Style>\n'
+        # ── Helicopter gx:Track styles (combined icon + trail for animated altitude arcs) ─
+        # MV-22B Osprey — orange icon + orange trail
+        '  <Style id="helo_mv22"><IconStyle><color>ff0077ff</color><scale>0.9</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>'
+        '</IconStyle><LineStyle><color>cc0077ff</color><width>2</width></LineStyle>'
+        '<LabelStyle><scale>0.5</scale></LabelStyle></Style>\n'
+        # CH-53E Super Stallion — sky blue
+        '  <Style id="helo_ch53"><IconStyle><color>ffff8800</color><scale>0.9</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>'
+        '</IconStyle><LineStyle><color>ccff8800</color><width>2</width></LineStyle>'
+        '<LabelStyle><scale>0.5</scale></LabelStyle></Style>\n'
+        # AH-1Z Viper — red
+        '  <Style id="helo_ah1z"><IconStyle><color>ff2222ff</color><scale>0.8</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>'
+        '</IconStyle><LineStyle><color>cc2222ff</color><width>2</width></LineStyle>'
+        '<LabelStyle><scale>0.45</scale></LabelStyle></Style>\n'
+        # Return legs — faded grey
+        '  <Style id="helo_ret"><IconStyle><color>55aaaaaa</color><scale>0.7</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>'
+        '</IconStyle><LineStyle><color>44aaaaaa</color><width>1</width></LineStyle>'
+        '<LabelStyle><scale>0.0</scale></LabelStyle></Style>\n'
+        # Legacy LineString styles (kept for backward compat; unused by helo gx:Tracks)
+        '  <Style id="trk_mv22"><LineStyle><color>cc0055ff</color><width>2</width></LineStyle></Style>\n'
+        '  <Style id="trk_ch53"><LineStyle><color>cc004488</color><width>2</width></LineStyle></Style>\n'
+        '  <Style id="trk_ah1z"><LineStyle><color>bb0000cc</color><width>1</width></LineStyle></Style>\n'
+        '  <Style id="trk_ret"><LineStyle><color>55aaaaaa</color><width>1</width></LineStyle></Style>\n'
+        '  <Style id="ico_mv22"><IconStyle><color>ff0077ff</color><scale>0.75</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>'
+        '</IconStyle><LabelStyle><scale>0.5</scale></LabelStyle></Style>\n'
+        '  <Style id="ico_ch53"><IconStyle><color>ffff8800</color><scale>0.75</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>'
+        '</IconStyle><LabelStyle><scale>0.5</scale></LabelStyle></Style>\n'
+        '  <Style id="ico_ah1z"><IconStyle><color>ff2222ff</color><scale>0.7</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>'
+        '</IconStyle><LabelStyle><scale>0.5</scale></LabelStyle></Style>\n'
+        # ── IRGC soldier + MANPADS icons ─────────────────────────────────────────
+        # IRGC infantry — dark red man icon
+        '  <Style id="ico_irgc"><IconStyle><color>ff0000bb</color><scale>0.45</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/man.png</href></Icon>'
+        '</IconStyle><LabelStyle><scale>0.0</scale></LabelStyle></Style>\n'
+        # IRGC MANPADS team — bright red target icon
+        '  <Style id="ico_irgc_mp"><IconStyle><color>ff0000ff</color><scale>0.75</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/target.png</href></Icon>'
+        '</IconStyle><LabelStyle><scale>0.5</scale></LabelStyle></Style>\n'
+        # ── WEZ / engagement zone circle styles ──────────────────────────────────
+        # IRGC MANPADS WEZ — red outline, faint red fill
+        '  <Style id="wez_irgc_mp"><LineStyle><color>ff0000ff</color><width>2</width></LineStyle>'
+        '<PolyStyle><color>220000ff</color><fill>1</fill></PolyStyle></Style>\n'
+        # USMC Stinger WEZ — cyan outline, faint cyan fill
+        '  <Style id="wez_usmc_stg"><LineStyle><color>ffff8800</color><width>2</width></LineStyle>'
+        '<PolyStyle><color>22ff8800</color><fill>1</fill></PolyStyle></Style>\n'
+        # ── Drone gx:Track + marker styles — mirrors CSG scenario styling exactly ─
+        # ICON_MUNITION = open-diamond (same as generate_style section in main scenarios)
+        # Standard Shahed breakthrough — orange, open-diamond, width 2
+        '  <Style id="kharg_shahed"><IconStyle><color>ff0080ff</color><scale>1.1</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon>'
+        '</IconStyle><LineStyle><color>cc0080ff</color><width>2</width></LineStyle>'
+        '<LabelStyle><scale>0.0</scale></LabelStyle></Style>\n'
+        # AI approach phase — same as shahed_ai_approach in main scenarios
+        '  <Style id="kharg_shahed_ai_approach"><IconStyle><color>ff0080ff</color><scale>1.1</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon>'
+        '</IconStyle><LineStyle><color>ff0080ff</color><width>3</width></LineStyle>'
+        '<LabelStyle><scale>0.6</scale></LabelStyle></Style>\n'
+        # AI terminal lock-on phase — same as shahed_ai_terminal in main scenarios
+        '  <Style id="kharg_shahed_ai_terminal"><IconStyle><color>ff00a0ff</color><scale>1.1</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/open-diamond.png</href></Icon>'
+        '</IconStyle><LineStyle><color>ff00a0ff</color><width>4</width></LineStyle>'
+        '<LabelStyle><scale>0.6</scale></LabelStyle></Style>\n'
+        # Stinger intercept flash — same as intercept_marker / intercept_marker_white
+        '  <Style id="kharg_intercept_mk"><IconStyle><color>ff000000</color><scale>0.9</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_square.png</href></Icon>'
+        '</IconStyle><LabelStyle><color>ff000000</color><scale>0.6</scale></LabelStyle></Style>\n'
+        '  <Style id="kharg_intercept_wh"><IconStyle><color>ffffffff</color><scale>0.9</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_square.png</href></Icon>'
+        '</IconStyle><LabelStyle><color>ffffffff</color><scale>0.6</scale></LabelStyle></Style>\n'
+        # Breakthrough impact — same as impact_marker (red target, scale 1.3)
+        '  <Style id="kharg_impact"><IconStyle><color>ff0000ff</color><scale>1.3</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/target.png</href></Icon>'
+        '</IconStyle><LabelStyle><color>ff0000ff</color><scale>0.9</scale></LabelStyle></Style>\n'
+        # ── Squad walk path LineStyles (colour = AABBGGRR) ──────────────────────
+        '  <Style id="sq_full_path"><LineStyle><color>ff00ee00</color><width>2</width></LineStyle>'
+        '<LabelStyle><scale>0</scale></LabelStyle></Style>\n'   # green
+        '  <Style id="sq_lt_path"><LineStyle><color>ff00eeff</color><width>2</width></LineStyle>'
+        '<LabelStyle><scale>0</scale></LabelStyle></Style>\n'   # yellow
+        '  <Style id="sq_hvy_path"><LineStyle><color>ff0088ff</color><width>2</width></LineStyle>'
+        '<LabelStyle><scale>0</scale></LabelStyle></Style>\n'   # orange
+        '  <Style id="sq_kia_path"><LineStyle><color>ff0000ff</color><width>2</width></LineStyle>'
+        '<LabelStyle><scale>0</scale></LabelStyle></Style>\n'   # red
+        # Lanchester ground battle timeline label
+        '  <Style id="sty_battle"><IconStyle><color>ff00ff88</color><scale>1.0</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/info-i.png</href></Icon>'
+        '</IconStyle><LabelStyle><color>ff00ff88</color><scale>0.85</scale></LabelStyle></Style>\n'
+        # Misagh-2 missile track — orange-red (AABBGGRR: ff=opaque, 00=B, 55=G, ff=R)
+        '  <Style id="ico_misagh2"><IconStyle><color>ff0055ff</color><scale>0.9</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>'
+        '</IconStyle><LineStyle><color>cc0055ff</color><width>2</width></LineStyle>'
+        '<LabelStyle><color>ff0055ff</color><scale>0.7</scale></LabelStyle></Style>\n'
+        # Misagh-2 miss — grey (semi-transparent track, no label)
+        '  <Style id="ico_misagh2_miss"><IconStyle><color>88888888</color><scale>0.6</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>'
+        '</IconStyle><LineStyle><color>44888888</color><width>1</width></LineStyle>'
+        '<LabelStyle><scale>0</scale></LabelStyle></Style>\n'
+        # Downed helicopter — red square
+        '  <Style id="ico_helo_down"><IconStyle><color>ff0000ff</color><scale>1.1</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_square.png</href></Icon>'
+        '</IconStyle><LabelStyle><color>ff0000ff</color><scale>0.7</scale></LabelStyle></Style>\n'
+        # ── F-35B Strike Package styles ──────────────────────────────────────────
+        # F-35B aircraft track — medium blue (AABBGGRR: ff=opaque, ff=B, 88=G, 00=R)
+        '  <Style id="helo_f35b"><IconStyle><color>ffff8800</color><scale>1.25</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/airports.png</href></Icon>'
+        '</IconStyle><LabelStyle><color>ffff8800</color><scale>0.8</scale></LabelStyle>'
+        '<LineStyle><color>88ff8800</color><width>2</width></LineStyle></Style>\n'
+        # AGM-88E AARGM impact — bright red target (SEAD)
+        '  <Style id="f35b_agm88_impact"><IconStyle><color>ff0000ff</color><scale>1.3</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/target.png</href></Icon>'
+        '</IconStyle><LabelStyle><color>ff0000ff</color><scale>0.85</scale></LabelStyle></Style>\n'
+        # GBU-38 JDAM impact — amber/gold target (CAS precision strike)
+        # AABBGGRR: ff=opaque, 00=B, aa=G, ff=R → RGB(255,170,0) = amber
+        '  <Style id="f35b_jdam_impact"><IconStyle><color>ff00aaff</color><scale>1.1</scale>'
+        '<Icon><href>http://maps.google.com/mapfiles/kml/shapes/target.png</href></Icon>'
+        '</IconStyle><LabelStyle><color>ff00aaff</color><scale>0.75</scale></LabelStyle></Style>\n'
+    )
+
+    # ── Amphibious Ready Group ships ──────────────────────────────────────────
+    kml.append('  <Folder><name>Amphibious Ready Group</name>\n')
+    for lon, lat, name, desc in [
+        (LHA_LON,  LHA_LAT,  "LHA-7 USS Tripoli",
+         "America-class LHA (Flight 0, no well deck) — 44,971 t<br/>"
+         "Commissioned: 15 Jul 2020 | Aviation-centric<br/>"
+         "Air wing: 12 MV-22B + 4 CH-53E + 4 AH-1Z + 20 F-35B<br/>"
+         "F-35B loadout: 4× SEAD (AGM-88E AARGM) + 16× CAS (GBU-38 JDAM beast mode)"),
+        (LPD1_LON, LPD1_LAT, "LPD-30 USS Harrisburg",
+         "San Antonio-class LPD — 25,900 t<br/>Well deck: 2 LCAC or 14 LCM-8"),
+        (LPD2_LON, LPD2_LAT, "LPD-29 USS Richard M. McCool Jr.",
+         "San Antonio-class LPD — 25,900 t<br/>Well deck: 2 LCAC or 14 LCM-8"),
+        (DDG_LON,  DDG_LAT,  "DDG-123 USS Ted Stevens (escort)",
+         "Arleigh Burke Flight III — NGFS + AAW<br/>5\"/62 Mk45 + SM-6 / SM-2 / ESSM"),
+    ]:
+        kml.append(_pm_point(name, lon, lat, "sty_ship", desc))
+    kml.append('  </Folder>\n')
+
+    # ── Kharg Island features ──────────────────────────────────────────────────
+    kml.append('  <Folder><name>Kharg Island</name>\n')
+    outline_pts = [
+        (50.295,29.220),(50.310,29.215),(50.335,29.215),(50.350,29.225),
+        (50.362,29.240),(50.364,29.258),(50.358,29.272),(50.348,29.286),
+        (50.332,29.298),(50.315,29.300),(50.300,29.294),(50.288,29.282),
+        (50.282,29.267),(50.282,29.252),(50.287,29.238),(50.295,29.220),
+    ]
+    coord_str = " ".join(f"{lo:.6f},{la:.6f},0" for lo, la in outline_pts)
+    kml.append(
+        f'  <Placemark><name>Kharg Island</name>'
+        f'<Style><LineStyle><color>ff00ffff</color><width>2</width></LineStyle>'
+        f'<PolyStyle><color>22ff6600</color><fill>1</fill></PolyStyle></Style>'
+        f'<Polygon><outerBoundaryIs><LinearRing>'
+        f'<coordinates>{coord_str}</coordinates>'
+        f'</LinearRing></outerBoundaryIs></Polygon></Placemark>\n'
+    )
+    for lon, lat, name, style, desc in [
+        (50.3285, 29.2605, "IRGC Garrison HQ", "sty_iran",
+         "~1,000 IRGC infantry + ~500 Basij | hardened command bunkers"),
+        (50.330,  29.280,  "HQ-2/HAWK SAM Battery", "sty_iran",
+         "40 km slant range | effective vs. high/slow targets"),
+        (50.310,  29.245,  "ZSU-23-4 Shilka #1", "sty_iran",
+         "23mm quad-barrel | 4,000 rds/min | 2,500 m ceiling"),
+        (50.346,  29.265,  "ZSU-23-4 Shilka #2", "sty_iran",
+         "Eastern approach corridor coverage"),
+        (50.320,  29.230,  "MANPADS Screen (Misagh-2)", "sty_iran",
+         "~20× IR-guided | 5 km range | 4 km ceiling"),
+        (50.305,  29.278,  "Oil Terminal T-1", "sty_ship",
+         "90% of Iranian crude exports | ROE: do not damage"),
+        (LZ1_LON, LZ1_LAT, "LZ FALCON — Airstrip (2,300 m)", "sty_lz",
+         "Primary LZ & seizure objective | enables C-130 resupply post-D-Day"),
+        (LZ2_LON, LZ2_LAT, "LZ EAGLE — Central Plateau", "sty_lz",
+         "Secondary LZ | waves 3-5 alternated here to reduce congestion"),
+    ]:
+        kml.append(_pm_point(name, lon, lat, style, desc))
+    kml.append('  </Folder>\n')
+
+    # ── IRGC Defensive Positions ──────────────────────────────────────────────
+    # 1,000 soldiers static across island; 10% MANPADS with individual WEZ circles.
+    kml.append(f'  <Folder><name>IRGC Defenders ({N_IRGC:,} soldiers, {N_IRGC_MP} MANPADS)</name>\n')
+
+    # Infantry (900) — static icons, 15% sampled for GE performance
+    IRGC_INF_SAMPLE = 0.15
+    _irgc_vis_rng = _random.Random(61)
+    kml.append(f'  <Folder><name>Infantry ({N_IRGC - N_IRGC_MP:,} soldiers — {int(IRGC_INF_SAMPLE*100)}% shown)</name>\n')
+    for _lon, _lat, _has_mp in irgc_pos:
+        if _has_mp:
+            continue
+        if _irgc_vis_rng.random() > IRGC_INF_SAMPLE:
+            continue
+        kml.append(_pm_point("IRGC", _lon, _lat, "ico_irgc",
+                              "IRGC infantry defender<br/>Small arms / RPG"))
+    kml.append('  </Folder>\n')
+
+    # MANPADS teams (100) — all shown, each with WEZ circle
+    kml.append(f'  <Folder><name>IRGC MANPADS Teams ({N_IRGC_MP} × Misagh-2, range {IRGC_MP_RNG_KM:.1f} km)</name>\n')
+    _mp_idx = 0
+    for _lon, _lat, _has_mp in irgc_pos:
+        if not _has_mp:
+            continue
+        _mp_idx += 1
+        kml.append(_pm_point(f"IRGC MANPADS #{_mp_idx}", _lon, _lat, "ico_irgc_mp",
+                              f"IRGC MANPADS team #{_mp_idx}<br/>"
+                              f"Weapon: Misagh-2 (IR MANPADS, Stinger clone)<br/>"
+                              f"Max range: {IRGC_MP_RNG_KM:.1f} km | Max alt: 3,800 m<br/>"
+                              f"Pk vs. unalerted helicopter: 0.15–0.25<br/>"
+                              f"<b>WEZ circle: {IRGC_MP_RNG_KM:.1f} km radius</b>"))
+        _circ = _circle_kml_pts(_lon, _lat, IRGC_MP_RNG_KM)
+        kml.append(
+            f'  <Placemark><name>MANPADS WEZ #{_mp_idx}</name>'
+            f'<description><![CDATA[Misagh-2 engagement envelope — {IRGC_MP_RNG_KM:.1f} km radius]]></description>'
+            f'<styleUrl>#wez_irgc_mp</styleUrl>'
+            f'<Polygon><outerBoundaryIs><LinearRing>'
+            f'<coordinates>{_circ}</coordinates>'
+            f'</LinearRing></outerBoundaryIs></Polygon></Placemark>\n'
+        )
+    kml.append('  </Folder>\n')
+    kml.append('  </Folder>\n')
+
+    # ── USMC Stinger MANPADS WEZ ──────────────────────────────────────────────
+    # Teams deploy at LZs immediately on landing; one advance position after wave 3.
+    kml.append(f'  <Folder><name>USMC Stinger WEZ ({STINGER_MAG} rounds, Pk={STINGER_PK*100:.0f}%, range {STINGER_RNG:.1f} km)</name>\n')
+    _stg_positions = [
+        (LZ1_LON, LZ1_LAT,  wave_arrive_s[0], "Stinger Team Alpha (LZ-1 primary)"),
+        (LZ2_LON, LZ2_LAT,  wave_arrive_s[2], "Stinger Team Bravo (LZ-2 secondary)"),
+        # Advance position after wave 5 consolidates centre
+        (KHARG_LON - 0.005, KHARG_LAT - 0.012, wave_arrive_s[4], "Stinger Team Charlie (island centre advance)"),
+    ]
+    for _slon, _slat, _active_s, _lbl in _stg_positions:
+        kml.append(_pm_point(_lbl, _slon, _slat, "ico_irgc_mp",
+                             f"USMC FIM-92 Stinger MANPADS team<br/>"
+                             f"Effective range: {STINGER_RNG:.1f} km | Pk={STINGER_PK*100:.0f}%<br/>"
+                             f"Magazine: {STINGER_MAG} rounds (shared pool)<br/>"
+                             f"Active from T+{_active_s/60:.0f} min",
+                             _active_s, SIM_END_S))
+        _circ = _circle_kml_pts(_slon, _slat, STINGER_RNG)
+        kml.append(
+            f'  <Placemark><name>{_lbl} WEZ</name>'
+            f'<description><![CDATA[FIM-92 Stinger max engagement envelope — {STINGER_RNG:.1f} km radius]]></description>'
+            f'<styleUrl>#wez_usmc_stg</styleUrl>'
+            f'{_tspan(_active_s, SIM_END_S)}'
+            f'<Polygon><outerBoundaryIs><LinearRing>'
+            f'<coordinates>{_circ}</coordinates>'
+            f'</LinearRing></outerBoundaryIs></Polygon></Placemark>\n'
+        )
+    kml.append('  </Folder>\n')
+
+    # ── Helicopter waves (animated back-and-forth sorties) ─────────────────────
+    kml.append('  <Folder><name>Helicopter Waves</name>\n')
+    wave_arrivals = []
+    total_ashore  = 0
+    for w in range(N_WAVES):
+        wave_num     = w + 1
+        wave_start_s = wave_depart_s[w]
+        arrive_lz_s  = wave_arrive_s[w]
+        depart_lz_s  = arrive_lz_s + UNLOAD_S
+        return_s     = wave_return_s[w]
+
+        if w < FULL_WAVES:
+            wave_marines = TROOPS_PER_WAVE
+            n_mv22_w, n_ch53_w = N_MV22, N_CH53
+        else:
+            wave_marines = REMAINDER
+            n_mv22_w = max(1, round(N_MV22 * REMAINDER / TROOPS_PER_WAVE))
+            n_ch53_w = max(1, round(N_CH53 * REMAINDER / TROOPS_PER_WAVE))
+
+        total_ashore += wave_marines
+        tlon = LZ1_LON if w % 2 == 0 else LZ2_LON
+        tlat = LZ1_LAT if w % 2 == 0 else LZ2_LAT
+        lz_nm = "LZ FALCON" if w % 2 == 0 else "LZ EAGLE"
+        wave_arrivals.append((arrive_lz_s, total_ashore, wave_num, wave_marines, lz_nm))
+
+        kml.append(f'  <Folder><name>Wave {wave_num}  T+{wave_start_s/60:.0f}min'
+                   f' — {wave_marines} Marines → {lz_nm}</name>\n')
+
+        for i in range(n_mv22_w):
+            slon, slat = _ship_offset(i, n_mv22_w, LHA_LON, LHA_LAT, 0.007)
+            stag = i * 20
+            dep_s = wave_start_s + stag
+            arr_s = dep_s + T_MV22
+            dpt_s = arr_s + UNLOAD_S
+            ret_s = dpt_s + T_MV22
+            # Outbound: 150 m cruise (NOE sea-skim) — gx:Track animates icon along arc
+            _out_pts = _helo_arc_pts(slon, slat, tlon, tlat, 150)
+            _out_ts  = [dep_s + (arr_s - dep_s) * k / (len(_out_pts) - 1)
+                        for k in range(len(_out_pts))]
+            kml.extend(gx_track("helo_mv22", _out_pts, _out_ts,
+                                 f"MV-22B #{i+1} W{wave_num}",
+                                 f"MV-22B Osprey #{i+1} | Wave {wave_num}<br/>"
+                                 f"Troops: {MV22_TROOPS} | Speed: {MV22_KMH} km/h<br/>"
+                                 f"Cruise altitude: 150 m AGL (NOE) | Departs T+{dep_s/60:.0f} min",
+                                 altitude_mode="relativeToGround"))
+            _ret_pts = _helo_arc_pts(tlon, tlat, slon, slat, 150)
+            _ret_ts  = [dpt_s + (ret_s - dpt_s) * k / (len(_ret_pts) - 1)
+                        for k in range(len(_ret_pts))]
+            kml.extend(gx_track("helo_ret", _ret_pts, _ret_ts,
+                                 f"MV-22B #{i+1} W{wave_num} RTN", "",
+                                 altitude_mode="relativeToGround"))
+
+        ch53_src = [(LHA_LON,LHA_LAT),(LHA_LON,LHA_LAT),(LPD1_LON,LPD1_LAT),(LPD2_LON,LPD2_LAT)]
+        for i in range(n_ch53_w):
+            blon, blat = ch53_src[i % len(ch53_src)]
+            slon, slat = _ship_offset(i, n_ch53_w, blon, blat, 0.005)
+            stag = i * 30
+            dep_s = wave_start_s + stag
+            arr_s = dep_s + _flt_s(slon, slat, LZ1_LON, LZ1_LAT, CH53_KMH)
+            dpt_s = arr_s + UNLOAD_S + 60
+            ret_s = dpt_s + _flt_s(LZ1_LON, LZ1_LAT, slon, slat, CH53_KMH)
+            # Outbound: 120 m cruise (CH-53E NOE, heavier/slower than Osprey)
+            _out_pts = _helo_arc_pts(slon, slat, LZ1_LON, LZ1_LAT, 120)
+            _out_ts  = [dep_s + (arr_s - dep_s) * k / (len(_out_pts) - 1)
+                        for k in range(len(_out_pts))]
+            kml.extend(gx_track("helo_ch53", _out_pts, _out_ts,
+                                 f"CH-53E #{i+1} W{wave_num}",
+                                 f"CH-53E Super Stallion #{i+1} | Wave {wave_num}<br/>"
+                                 f"Troops: {CH53_TROOPS} | Speed: {CH53_KMH} km/h<br/>"
+                                 f"Cruise altitude: 120 m AGL | Departs T+{dep_s/60:.0f} min",
+                                 altitude_mode="relativeToGround"))
+            _ret_pts = _helo_arc_pts(LZ1_LON, LZ1_LAT, slon, slat, 120)
+            _ret_ts  = [dpt_s + (ret_s - dpt_s) * k / (len(_ret_pts) - 1)
+                        for k in range(len(_ret_pts))]
+            kml.extend(gx_track("helo_ret", _ret_pts, _ret_ts,
+                                 f"CH-53E #{i+1} W{wave_num} RTN", "",
+                                 altitude_mode="relativeToGround"))
+
+        for i in range(N_AH1Z):
+            slon, slat = _ship_offset(i, N_AH1Z, DDG_LON, DDG_LAT, 0.004)
+            arr_esc = wave_start_s + T_AH1Z - 60
+            end_esc = depart_lz_s + 120
+            ret_esc = end_esc + _flt_s(LZ1_LON, LZ1_LAT, DDG_LON, DDG_LAT, AH1Z_KMH)
+            # Inbound: 80 m cruise (CAS escort — lower for threat identification)
+            _in_pts = _helo_arc_pts(slon, slat, LZ1_LON, LZ1_LAT, 80)
+            _in_ts  = [wave_start_s + (arr_esc - wave_start_s) * k / (len(_in_pts) - 1)
+                       for k in range(len(_in_pts))]
+            kml.extend(gx_track("helo_ah1z", _in_pts, _in_ts,
+                                 f"AH-1Z #{i+1} W{wave_num}",
+                                 f"AH-1Z Viper #{i+1} | Wave {wave_num} CAS escort<br/>"
+                                 f"Speed: {AH1Z_KMH} km/h | Cruise altitude: 80 m AGL<br/>"
+                                 f"Role: fire suppression + close air support",
+                                 altitude_mode="relativeToGround"))
+            _out_pts = _helo_arc_pts(LZ1_LON, LZ1_LAT, slon, slat, 80)
+            _out_ts  = [end_esc + (ret_esc - end_esc) * k / (len(_out_pts) - 1)
+                        for k in range(len(_out_pts))]
+            kml.extend(gx_track("helo_ret", _out_pts, _out_ts,
+                                 f"AH-1Z #{i+1} W{wave_num} RTN", "",
+                                 altitude_mode="relativeToGround"))
+
+        kml.append('  </Folder>\n')
+    kml.append('  </Folder>\n')
+
+    # ── Sortie counter — trips completed / remaining, updates with timeline ────
+    kml.append('  <Folder><name>Sortie Counter</name>\n'
+               '  <!-- One placemark per completed wave-return; '
+               'active during the window until the next return -->\n')
+    for w in range(N_WAVES):
+        ret_s      = wave_return_s[w]
+        next_ret_s = wave_return_s[w + 1] if w + 1 < N_WAVES else SIM_END_S
+        trips_done = w + 1
+        remaining  = N_WAVES - trips_done
+        n_mv22_w   = N_MV22 if w < FULL_WAVES else max(1, round(N_MV22 * REMAINDER / TROOPS_PER_WAVE))
+        n_ch53_w   = N_CH53 if w < FULL_WAVES else max(1, round(N_CH53 * REMAINDER / TROOPS_PER_WAVE))
+        kml.append(
+            f'  <Placemark>'
+            f'<name>Sorties: {trips_done}/{N_WAVES} complete — {remaining} remaining</name>'
+            f'<description><![CDATA['
+            f'<b>Sortie {trips_done} of {N_WAVES} complete</b> at T+{ret_s/60:.0f} min<br/>'
+            f'Marines ashore: <b>{wave_arrivals[w][1]:,}</b> / {TOTAL_MARINES:,}<br/>'
+            f'Trips remaining: <b>{remaining}</b><br/>'
+            f'MV-22B round trips this wave: {n_mv22_w}  (cumulative: {trips_done * n_mv22_w})<br/>'
+            f'CH-53E round trips this wave: {n_ch53_w}  (cumulative: {trips_done * n_ch53_w})'
+            f']]></description>'
+            f'<styleUrl>#sty_counter</styleUrl>'
+            f'{_tspan(ret_s, next_ret_s)}'
+            f'<Point><coordinates>{LHA_LON + 0.010:.6f},{LHA_LAT + 0.010:.6f},0</coordinates>'
+            f'</Point></Placemark>\n'
+        )
+    kml.append('  </Folder>\n')
+
+    # ── Helicopter shootdown events ────────────────────────────────────────────
+    kml.append(f'  <Folder><name>Helicopter Losses ({n_helos_lost} aircraft downed)</name>\n'
+               f'  <!-- AI drone proximity kills — 50% Pk within {HELO_KILL_KM:.1f} km -->\n')
+    for helo_id, helo_type, helo_wave, kill_t, drone_wave in helo_kill_events:
+        # Place marker near the flight path midpoint
+        tlon_h = LZ1_LON if helo_wave % 2 == 0 else LZ2_LON
+        tlat_h = LZ1_LAT if helo_wave % 2 == 0 else LZ2_LAT
+        mk_lon = (LHA_LON + tlon_h) / 2 + helo_rng.uniform(-0.015, 0.015)
+        mk_lat = (LHA_LAT + tlat_h) / 2 + helo_rng.uniform(-0.008, 0.008)
+        kml.append(
+            f'  <Placemark><name>SHOT DOWN: {helo_type} ({helo_id})</name>'
+            f'<description><![CDATA['
+            f'<b style="color:red">{helo_type} {helo_id} — SHOT DOWN</b><br/>'
+            f'Wave {helo_wave + 1} outbound sortie terminated<br/>'
+            f'Kill time: T+{kill_t/60:.1f} min<br/>'
+            f'Cause: AI-guided Shahed-136 wave {drone_wave} (proximity kill)<br/>'
+            f'<b>All subsequent sorties for this aircraft cancelled</b>'
+            f']]></description>'
+            f'<styleUrl>#ico_helo_down</styleUrl>'
+            f'<TimeStamp><when>{_ts(kill_t)}</when></TimeStamp>'
+            f'<Point><coordinates>{mk_lon:.6f},{mk_lat:.6f},400</coordinates>'
+            f'</Point></Placemark>\n'
+        )
+    if not helo_kill_events:
+        kml.append('  <!-- No helicopter losses this simulation run -->\n')
+    kml.append('  </Folder>\n')
+
+    # ── IRGC Misagh-2 MANPADS engagements ─────────────────────────────────────
+    # Each entry: animated missile arc (gx:Track) + hit marker if kill.
+    # Hit  → orange-red track (#ico_misagh2), red helo-down icon
+    # Miss → grey translucent track (#ico_misagh2_miss)
+    kml.append(
+        f'  <Folder><name>IRGC Misagh-2 MANPADS — {misagh_shots} shots / '
+        f'{misagh_hits} kills / {misagh_misses} misses</name>\n'
+        f'  <!-- {int(100 * MISAGH_SEAD_SURV)}% of teams survive F-35B SEAD; '
+        f'Pk MV-22B={MISAGH_PK_TYPE["MV-22B"]:.0%} '
+        f'CH-53E={MISAGH_PK_TYPE["CH-53E"]:.0%} '
+        f'AH-1Z={MISAGH_PK_TYPE["AH-1Z"]:.0%} -->\n'
+    )
+    for ev in misagh_events:
+        sty  = 'ico_misagh2' if ev['hit'] else 'ico_misagh2_miss'
+        tag  = 'HIT' if ev['hit'] else 'MISS'
+        # IR pursuit arc: launch from ground → helo altitude (~150 m cruise)
+        # Use _helo_arc_pts with 300 m peak to give the missile a visible arc
+        _msl_pts = _helo_arc_pts(ev['mp_lon'], ev['mp_lat'],
+                                  ev['h_lon'],  ev['h_lat'], 300, n_pts=8)
+        _msl_ts  = [ev['eng_t'] + (ev['kill_t'] - ev['eng_t']) * k / (len(_msl_pts) - 1)
+                    for k in range(len(_msl_pts))]
+        kml.extend(gx_track(
+            sty, _msl_pts, _msl_ts,
+            f"Misagh-2 [{tag}] → {ev['helo_id']} W{ev['wave']+1}",
+            f"<![CDATA[<b>Misagh-2 MANPADS — {tag}</b><br/>"
+            f"Target: {ev['helo_type']} {ev['helo_id']}<br/>"
+            f"Wave: {ev['wave']+1}<br/>"
+            f"Range: {ev['dist_km']:.1f} km<br/>"
+            f"Launch T{ev['eng_t']/60:+.1f} min | Impact T{ev['kill_t']/60:+.1f} min<br/>"
+            + ('<b style="color:red">AIRCRAFT DESTROYED</b>' if ev['hit'] else 'Evaded / flares / miss') + "]]>",
+            altitude_mode="relativeToGround"
+        ))
+        if ev['hit']:
+            kml.append(
+                f'  <Placemark><name>SHOT DOWN: {ev["helo_type"]} {ev["helo_id"]} [Misagh-2]</name>'
+                f'<description><![CDATA['
+                f'<b style="color:red">{ev["helo_type"]} {ev["helo_id"]} — DESTROYED by Misagh-2</b><br/>'
+                f'Wave {ev["wave"] + 1} outbound sortie terminated<br/>'
+                f'Kill time: T{ev["kill_t"]/60:.1f} min<br/>'
+                f'Cause: IRGC Misagh-2 MANPADS (IR-guided)<br/>'
+                f'Range at intercept: {ev["dist_km"]:.1f} km<br/>'
+                f'<b>All subsequent sorties for this aircraft cancelled</b>'
+                f']]></description>'
+                f'<styleUrl>#ico_helo_down</styleUrl>'
+                f'<TimeStamp><when>{_ts(ev["kill_t"])}</when></TimeStamp>'
+                f'<Point><coordinates>{ev["h_lon"]:.6f},{ev["h_lat"]:.6f},150</coordinates>'
+                f'</Point></Placemark>\n'
+            )
+    if not misagh_events:
+        kml.append('  <!-- All MANPADS neutralised by SEAD — no engagements -->\n')
+    kml.append('  </Folder>\n')
+
+    # ── F-35B Lightning II Strike Package ─────────────────────────────────────
+    # SEAD wave: 4 aircraft carry 2× AGM-88E AARGM each → 8 anti-radiation missiles
+    #   against HQ-2/HAWK SAM, 2× ZSU-23-4 Shilka, and MANPADS screen.
+    #   Fire from standoff (~36 km south), well outside HAWK 40 km slant envelope.
+    # CAS waves: 16 aircraft × 2 sorties × 4× GBU-38 JDAM = 128 precision bombs.
+    #   Each bomb is a separate targetable placemark (CEP 3 m GPS/INS).
+    #   Targets: IRGC HQ, command nodes, infantry concentrations, vehicle parks.
+    f35b_rng = _random.Random(67)
+
+    # Timing
+    # SEAD: depart 10 min before helo wave 1 so AGM-88s land ~5 min before helos
+    F35B_SEAD_DEP_S  = wave_depart_s[0] - 600.0
+    # CAS sortie 1: depart so aircraft arrive just before first helo wave lands
+    F35B_CAS1_DEP_S  = wave_arrive_s[0] - T_F35B - 120.0
+    # CAS sortie 2: after all aircraft return, rearm, and redeploy
+    F35B_CAS1_RTN_S  = F35B_CAS1_DEP_S + T_F35B + GBU38_PER_CAS * 30 + 60 + T_F35B
+    F35B_CAS2_DEP_S  = F35B_CAS1_RTN_S + F35B_REARM_S
+
+    # AGM-88E flight speed for transit computation
+    AGM88_SPD_KS = AGM88_KMH / 3_600.0
+
+    # SEAD strike targets (one per aircraft; 2 missiles each)
+    SEAD_TARGETS = [
+        (50.330, 29.280, "HQ-2/HAWK SAM Battery"),
+        (50.310, 29.245, "ZSU-23-4 Shilka #1"),
+        (50.346, 29.265, "ZSU-23-4 Shilka #2"),
+        (50.320, 29.230, "MANPADS Screen (Misagh-2)"),
+    ]
+
+    # CAS target pool — priority nodes first, then sampled IRGC positions
+    CAS_PRIO = [
+        (50.3285, 29.2605, "IRGC Garrison HQ — command bunker"),
+        (50.330,  29.280,  "HAWK SAM battery (follow-on strike)"),
+        (50.310,  29.245,  "ZSU-23-4 Shilka #1 (follow-on)"),
+        (50.346,  29.265,  "ZSU-23-4 Shilka #2 (follow-on)"),
+        (50.320,  29.230,  "MANPADS screen (follow-on)"),
+        (50.308,  29.275,  "Oil terminal perimeter — IRGC fighting position"),
+        (50.322,  29.250,  "IRGC ammunition cache (estimated)"),
+        (50.328,  29.238,  "IRGC motor pool / vehicle concentration"),
+        (50.340,  29.255,  "IRGC mortar position (estimated)"),
+        (50.318,  29.262,  "IRGC command post — northern sector"),
+    ]
+    _cas_tgt_pool = list(CAS_PRIO)
+    for _ii_c, (_lon_c, _lat_c, _hmp_c) in enumerate(irgc_pos):
+        if _ii_c % 4 == 0:   # every 4th IRGC soldier position
+            _cas_tgt_pool.append((_lon_c, _lat_c, "IRGC infantry concentration"))
+
+    _cas_tgt_idx   = 0
+    _agm88_seq     = 0    # global AGM-88 weapon serial
+    _gbu38_seq     = 0    # global GBU-38 weapon serial
+    f35b_agm88_hits = 0
+    f35b_jdam_hits  = 0
+
+    kml.append(
+        f'  <Folder><name>F-35B Strike Package — {N_F35B} aircraft</name>\n'
+        f'  <!-- SEAD: {N_F35B_SEAD}× F-35B, {N_F35B_SEAD*AGM88_PER_SEAD}× AGM-88E AARGM '
+        f'(150+ km range, Mach 2 terminal, passive-radar + IIR guidance) -->\n'
+        f'  <!-- CAS: {N_F35B_CAS}× F-35B, {F35B_SORTIES} sorties, '
+        f'{N_F35B_CAS*GBU38_PER_CAS*F35B_SORTIES}× GBU-38 JDAM (500 lb, CEP {F35B_CEP_M:.0f} m) -->\n'
+    )
+
+    # ── SEAD wave ─────────────────────────────────────────────────────────────
+    kml.append(
+        f'  <Folder><name>SEAD Wave — {N_F35B_SEAD}× F-35B / '
+        f'{N_F35B_SEAD*AGM88_PER_SEAD}× AGM-88E AARGM</name>\n'
+        f'  <!-- Suppress HQ-2/HAWK SAM + ZSU-23-4 × 2 + MANPADS '
+        f'before first helo wave arrives -->\n'
+    )
+    for si in range(N_F35B_SEAD):
+        tgt_lon, tgt_lat, tgt_name = SEAD_TARGETS[si]
+        slon, slat = _ship_offset(si, N_F35B_SEAD, LHA_LON, LHA_LAT, 0.006)
+        dep_s  = F35B_SEAD_DEP_S + si * 30.0
+        fire_t = dep_s + T_F35B_TO_FIRE
+        ret_dep_s = fire_t + 120.0   # 2 min loiter at fire point
+        ret_s  = ret_dep_s + _flt_s(F35B_SEAD_FIRE_LON, F35B_SEAD_FIRE_LAT,
+                                     slon, slat, F35B_KMH)
+        # Outbound to standoff fire point
+        _sead_out = _jet_arc_pts(slon, slat,
+                                  F35B_SEAD_FIRE_LON, F35B_SEAD_FIRE_LAT, F35B_ALT_M)
+        _sead_out_ts = [dep_s + (fire_t - dep_s) * k / (len(_sead_out) - 1)
+                        for k in range(len(_sead_out))]
+        kml.extend(gx_track(
+            "helo_f35b", _sead_out, _sead_out_ts,
+            f"F-35B SEAD #{si+1}",
+            f"<![CDATA[<b>F-35B Lightning II — SEAD #{si+1}</b><br/>"
+            f"Role: Suppression of Enemy Air Defenses (SEAD)<br/>"
+            f"Loadout: {AGM88_PER_SEAD}× AGM-88E AARGM + {AIM120_PER_F35B}× AIM-120C-7<br/>"
+            f"Target: <b>{tgt_name}</b><br/>"
+            f"Fire point: {_dist_km(LHA_LON, LHA_LAT, F35B_SEAD_FIRE_LON, F35B_SEAD_FIRE_LAT):.0f} km "
+            f"from LHA-7 (standoff — outside HAWK WEZ)<br/>"
+            f"Cruise: {F35B_KMH} km/h at {F35B_ALT_M:,} m AGL<br/>"
+            f"Departs: T{dep_s/60:+.1f} min]]>",
+            altitude_mode="relativeToGround"
+        ))
+        # Return leg
+        _sead_ret = _jet_arc_pts(F35B_SEAD_FIRE_LON, F35B_SEAD_FIRE_LAT,
+                                  slon, slat, F35B_ALT_M)
+        _sead_ret_ts = [ret_dep_s + (ret_s - ret_dep_s) * k / (len(_sead_ret) - 1)
+                        for k in range(len(_sead_ret))]
+        kml.extend(gx_track("helo_ret", _sead_ret, _sead_ret_ts,
+                             f"F-35B SEAD #{si+1} RTN", "",
+                             altitude_mode="relativeToGround"))
+        # AGM-88E individual weapon placemarks (2 per aircraft)
+        for mi in range(AGM88_PER_SEAD):
+            _agm88_seq += 1
+            imp_lon, imp_lat = _cep_scatter(tgt_lon, tgt_lat, 5.0, f35b_rng)
+            agm_dist = _dist_km(F35B_SEAD_FIRE_LON, F35B_SEAD_FIRE_LAT, imp_lon, imp_lat)
+            agm_flight_s = agm_dist / AGM88_SPD_KS
+            imp_t = fire_t + mi * 6.0 + agm_flight_s
+            kml.append(
+                f'  <Placemark>'
+                f'<name>AGM-88E #{_agm88_seq} → {tgt_name}</name>'
+                f'<description><![CDATA['
+                f'<b>AGM-88E AARGM — Weapon #{_agm88_seq}</b><br/>'
+                f'<table border="0" cellpadding="2">'
+                f'<tr><td><b>Aircraft</b></td><td>F-35B SEAD #{si+1}</td></tr>'
+                f'<tr><td><b>Target</b></td><td>{tgt_name}</td></tr>'
+                f'<tr><td><b>Impact coords</b></td>'
+                f'<td>{imp_lat:.5f}°N, {imp_lon:.5f}°E</td></tr>'
+                f'<tr><td><b>CEP</b></td><td>5 m (passive-radar + IIR terminal)</td></tr>'
+                f'<tr><td><b>Warhead</b></td><td>WDU-21/B 146 kg blast-fragmentation</td></tr>'
+                f'<tr><td><b>Speed</b></td><td>Mach 1.8 cruise → Mach 2+ terminal</td></tr>'
+                f'<tr><td><b>Standoff range</b></td><td>{agm_dist:.1f} km</td></tr>'
+                f'<tr><td><b>Impact time</b></td><td>T{imp_t/60:+.1f} min</td></tr>'
+                f'</table>'
+                f']]></description>'
+                f'<styleUrl>#f35b_agm88_impact</styleUrl>'
+                f'<TimeStamp><when>{_ts(imp_t)}</when></TimeStamp>'
+                f'<Point><coordinates>{imp_lon:.6f},{imp_lat:.6f},0</coordinates>'
+                f'</Point></Placemark>\n'
+            )
+            f35b_agm88_hits += 1
+    kml.append('  </Folder>\n')   # SEAD wave
+
+    # ── CAS sorties ───────────────────────────────────────────────────────────
+    total_cas_bombs = N_F35B_CAS * GBU38_PER_CAS * F35B_SORTIES
+    kml.append(
+        f'  <Folder><name>CAS Sorties — {N_F35B_CAS}× F-35B / '
+        f'{total_cas_bombs}× GBU-38 JDAM / {F35B_SORTIES} waves</name>\n'
+    )
+    for sortie in range(F35B_SORTIES):
+        sortie_dep_base = F35B_CAS1_DEP_S if sortie == 0 else F35B_CAS2_DEP_S
+        kml.append(f'  <Folder><name>CAS Wave {sortie+1}</name>\n')
+        for ci in range(N_F35B_CAS):
+            ac_id = ci + 1
+            slon, slat = _ship_offset(ci, N_F35B_CAS, LHA_LON, LHA_LAT, 0.012)
+            dep_s  = sortie_dep_base + ci * 12.0
+            arr_s  = dep_s + _flt_s(slon, slat, KHARG_LON, KHARG_LAT, F35B_KMH)
+            # All 4 bombs dropped at 30-s intervals after arrival
+            last_bomb_t  = arr_s + GBU38_PER_CAS * 30.0
+            ret_dep_s    = last_bomb_t + 60.0   # 60 s loiter post-strike
+            ret_s        = ret_dep_s + _flt_s(KHARG_LON, KHARG_LAT, slon, slat, F35B_KMH)
+
+            # Outbound track
+            _cas_out = _jet_arc_pts(slon, slat, KHARG_LON, KHARG_LAT, F35B_ALT_M)
+            _cas_out_ts = [dep_s + (arr_s - dep_s) * k / (len(_cas_out) - 1)
+                           for k in range(len(_cas_out))]
+            kml.extend(gx_track(
+                "helo_f35b", _cas_out, _cas_out_ts,
+                f"F-35B CAS #{ac_id} W{sortie+1}",
+                f"<![CDATA[<b>F-35B Lightning II — CAS #{ac_id} Wave {sortie+1}</b><br/>"
+                f"Role: Close Air Support (CAS) — beast mode<br/>"
+                f"Loadout: {GBU38_PER_CAS}× GBU-38 JDAM (500 lb) + "
+                f"{AIM120_PER_F35B}× AIM-120C-7 + {AIM9X_PER_F35B}× AIM-9X Block II<br/>"
+                f"Cruise: {F35B_KMH} km/h at {F35B_ALT_M:,} m AGL<br/>"
+                f"Bombs on target: {arr_s/60:+.1f} – {last_bomb_t/60:+.1f} min<br/>"
+                f"CEP: {F35B_CEP_M:.0f} m (GPS/INS)]]>",
+                altitude_mode="relativeToGround"
+            ))
+            # Return track
+            _cas_ret = _jet_arc_pts(KHARG_LON, KHARG_LAT, slon, slat, F35B_ALT_M)
+            _cas_ret_ts = [ret_dep_s + (ret_s - ret_dep_s) * k / (len(_cas_ret) - 1)
+                           for k in range(len(_cas_ret))]
+            kml.extend(gx_track("helo_ret", _cas_ret, _cas_ret_ts,
+                                 f"F-35B CAS #{ac_id} W{sortie+1} RTN", "",
+                                 altitude_mode="relativeToGround"))
+
+            # Individual GBU-38 JDAM impact placemarks
+            for bi in range(GBU38_PER_CAS):
+                _gbu38_seq += 1
+                tgt_e = _cas_tgt_pool[_cas_tgt_idx % len(_cas_tgt_pool)]
+                _cas_tgt_idx += 1
+                t_lon_b, t_lat_b, t_name_b = tgt_e[0], tgt_e[1], tgt_e[2]
+                imp_lon_b, imp_lat_b = _cep_scatter(t_lon_b, t_lat_b, F35B_CEP_M, f35b_rng)
+                bomb_t = arr_s + (bi + 1) * 30.0
+                kml.append(
+                    f'  <Placemark>'
+                    f'<name>GBU-38 #{_gbu38_seq} → {t_name_b[:40]}</name>'
+                    f'<description><![CDATA['
+                    f'<b>GBU-38 JDAM — Weapon #{_gbu38_seq}</b><br/>'
+                    f'<table border="0" cellpadding="2">'
+                    f'<tr><td><b>Aircraft</b></td>'
+                    f'<td>F-35B CAS #{ac_id} Wave {sortie+1}</td></tr>'
+                    f'<tr><td><b>Target</b></td><td>{t_name_b}</td></tr>'
+                    f'<tr><td><b>Impact coords</b></td>'
+                    f'<td>{imp_lat_b:.5f}°N, {imp_lon_b:.5f}°E</td></tr>'
+                    f'<tr><td><b>Weapon</b></td>'
+                    f'<td>GBU-38 / Mk-82 500 lb (227 kg)</td></tr>'
+                    f'<tr><td><b>Guidance</b></td>'
+                    f'<td>GPS/INS JDAM kit, CEP {F35B_CEP_M:.0f} m</td></tr>'
+                    f'<tr><td><b>Warhead</b></td>'
+                    f'<td>89 kg H-6 blast-fragmentation</td></tr>'
+                    f'<tr><td><b>Lethal radius</b></td><td>~25 m vs. personnel in open</td></tr>'
+                    f'<tr><td><b>Delivery alt</b></td><td>{F35B_ALT_M:,} m AGL</td></tr>'
+                    f'<tr><td><b>Bomb #</b></td><td>{bi+1} of {GBU38_PER_CAS} this sortie</td></tr>'
+                    f'<tr><td><b>Impact time</b></td><td>T{bomb_t/60:+.1f} min</td></tr>'
+                    f'</table>'
+                    f']]></description>'
+                    f'<styleUrl>#f35b_jdam_impact</styleUrl>'
+                    f'<TimeStamp><when>{_ts(bomb_t)}</when></TimeStamp>'
+                    f'<Point><coordinates>{imp_lon_b:.6f},{imp_lat_b:.6f},0</coordinates>'
+                    f'</Point></Placemark>\n'
+                )
+                f35b_jdam_hits += 1
+        kml.append('  </Folder>\n')   # CAS Wave N
+    kml.append('  </Folder>\n')   # CAS Sorties
+    kml.append('  </Folder>\n')   # F-35B Strike Package
+
+    f35b_total_weapons = f35b_agm88_hits + f35b_jdam_hits
+
+    # ── Fireteam gx:Track paths — one Placemark per HP state per squad ───────────
+    # gx:Track is the most GE-efficient animated agent primitive:
+    #   • Single Placemark per state (vs. N per-step Placemarks)
+    #   • GE hardware-interpolates icon position between <when> timestamps
+    #   • Automatic heading (icon faces direction of travel via <gx:angles>)
+    #   • Trail rendered via LineStyle; icon via IconStyle — both in one Style
+    # Splitting at HP changes gives at most 4 Placemarks per fireteam (one per state).
+    hp_trk_style = {4: "sq_full", 3: "sq_lt", 2: "sq_hvy", 1: "sq_hvy", 0: "sq_kia"}
+
+    kml.append(f'  <Folder><name>Marine Fireteams ({N_SQUADS} × 4 marines, gx:Track)</name>\n'
+               f'  <!-- One gx:Track Placemark per HP state per fireteam. -->\n'
+               f'  <!-- Green=4HP  Yellow=3HP  Orange=1-2HP  Red=KIA -->\n')
+    for si, walk_steps in enumerate(squad_walk):
+        sq_wave  = squad_pos[si][2]
+        events   = squad_events[si]
+        active_s = wave_arrive_s[sq_wave]
+
+        # Build HP state timeline [(t_start, t_end, hp)]
+        cur_hp, cur_t = SQUAD_HP, active_s
+        states = []
+        for evt_t, new_hp in events:
+            if cur_t < evt_t:
+                states.append((cur_t, evt_t, cur_hp))
+            cur_t, cur_hp = evt_t, new_hp
+        states.append((cur_t, SIM_END_S, cur_hp))
+
+        for st_b, st_e, hp in states:
+            if st_b >= st_e:
+                continue
+            # Walk waypoints in [st_b, st_e) → gx:Track pts + timestamps
+            seg_pts = [(wlon, wlat, 0.0) for wlon, wlat, wt in walk_steps if st_b <= wt < st_e]
+            seg_ts  = [wt                for wlon, wlat, wt in walk_steps if st_b <= wt < st_e]
+            if not seg_pts:
+                nearest = min(walk_steps, key=lambda x: abs(x[2] - st_b))
+                seg_pts = [(nearest[0], nearest[1], 0.0)]
+                seg_ts  = [st_b]
+            # Need at least 2 points for a meaningful track; pad if needed
+            if len(seg_pts) == 1:
+                seg_pts = seg_pts * 2
+                seg_ts  = [st_b, st_e]
+
+            lbl  = (f"FT.{si+1:03d}" if hp == SQUAD_HP else
+                    (f"FT.{si+1:03d} KIA" if hp == 0 else f"FT.{si+1:03d} {hp}HP"))
+            desc = (f"Fireteam {si+1:03d} | Wave {sq_wave+1}<br/>"
+                    f"HP: {hp}/{SQUAD_HP} | Marines alive: {hp}/{MARINES_PER_SQUAD}<br/>"
+                    f"{'KIA — fireteam eliminated' if hp == 0 else ('Damaged' if hp < SQUAD_HP else 'Operational')}")
+            sty  = hp_trk_style.get(hp, "sq_kia")
+            kml.extend(gx_track(sty, seg_pts, seg_ts, lbl, desc,
+                                altitude_mode="clampToGround"))
+    kml.append('  </Folder>\n')
+
+    # ── Shahed-136 gx:Track animated drone strikes ────────────────────────────
+    # Rendering strategy for 2,000-drone swarm (GE performance):
+    #   • All AI drones rendered (2-phase approach + terminal): highest interest
+    #   • All intercepted drones rendered (partial arc + flash): shows Stinger effect
+    #   • Standard breakthroughs: sample 15% for representative swarm density
+    #     (the remaining 85% are in the stats but not individually visualised)
+    N_ARC        = 24    # arc segments per drone (25 points, smooth sea-skim profile)
+    DRONE_SAMPLE = 0.15  # fraction of standard breakthrough drones to render
+    drone_vis_rng = _random.Random(31415)
+
+    kml.append('  <Folder><name>Shahed-136 Drone Strikes</name>\n')
+    for _, n_d, wave_lbl in DRONE_WAVES:
+        kml.append(f'  <Folder><name>Wave {wave_lbl} ({n_d} drones)</name>\n')
+        for dr in (d for d in all_drones if d['wave'] == wave_lbl):
+            s_lon, s_lat = dr['src_lon'], dr['src_lat']
+            i_lon, i_lat = dr['imp_lon'], dr['imp_lat']
+            launch_s, impact_s, flight_s = dr['launch_s'], dr['impact_s'], dr['flight_s']
+            dist_km = dr['dist_km']
+
+            if dr['is_int']:
+                # ── Intercepted: partial arc → Stinger flash ──────────────────
+                # Compute how far along the arc the intercept occurs
+                int_lon, int_lat, int_s = dr['int_lon'], dr['int_lat'], dr['int_s']
+                int_frac = (int_s - launch_s) / max(flight_s, 1)
+                n_seg_int = max(2, round(int_frac * N_ARC))
+                full_arc  = arc_points(s_lon, s_lat, i_lon, i_lat, SHAHED_PEAK, N_ARC, True)
+                arc_int   = full_arc[:n_seg_int + 1]
+                t_int_pts = [launch_s + (k / N_ARC) * flight_s for k in range(n_seg_int + 1)]
+                kml.extend(gx_track(
+                    "kharg_shahed", arc_int, t_int_pts,
+                    f"Shahed {wave_lbl}-{dr['idx']} [INTERCEPTED]",
+                    f"Shahed-136 wave {wave_lbl} #{dr['idx']}<br/>"
+                    f"From: {dr['site_name']} | Dist: {dist_km:.0f} km<br/>"
+                    f"<b>Intercepted</b> by FIM-92 Stinger at T+{int_s/60:.1f} min",
+                    altitude_mode="relativeToGround"
+                ))
+                # 10 alternating flash markers at intercept point (3 s each)
+                for _step in range(10):
+                    _t0  = int_s + _step * 3.0
+                    _t1  = _t0 + 3.0
+                    _sty = "kharg_intercept_mk" if _step % 2 == 0 else "kharg_intercept_wh"
+                    kml.append(
+                        f'  <Placemark><name>Stinger Kill {wave_lbl}-{dr["idx"]}</name>'
+                        f'<styleUrl>#{_sty}</styleUrl>'
+                        f'{_tspan(_t0, _t1)}'
+                        f'<Point><altitudeMode>relativeToGround</altitudeMode>'
+                        f'<coordinates>{int_lon:.5f},{int_lat:.5f},500</coordinates>'
+                        f'</Point></Placemark>\n'
+                    )
+
+            elif dr['is_ai']:
+                # ── AI-guided: two-phase approach + terminal lock-on ──────────
+                lock_frac = dr['lock_frac']
+                n_seg_app = max(2, round(lock_frac * N_ARC))
+                full_arc  = arc_points(s_lon, s_lat, i_lon, i_lat, SHAHED_PEAK, N_ARC, True)
+                arc_app   = full_arc[:n_seg_app + 1]
+                t_app     = [launch_s + (k / N_ARC) * flight_s for k in range(n_seg_app + 1)]
+                lock_pt   = arc_app[-1]
+                lock_t    = t_app[-1]
+                ai_lon, ai_lat = dr['ai_tgt_lon'], dr['ai_tgt_lat']
+                t_terminal    = flight_s * (1.0 - lock_frac) * 0.88
+                t_term_end    = lock_t + t_terminal
+                t_term        = [lock_t + (k / 8) * t_terminal for k in range(9)]
+                term_arc      = arc_points(lock_pt[0], lock_pt[1], ai_lon, ai_lat,
+                                           max(lock_pt[2] * 0.5, 15.0), 8, True)
+                lock_km = dist_km * (1.0 - lock_frac)
+                kml.extend(gx_track(
+                    "kharg_shahed_ai_approach", arc_app, t_app,
+                    f"Shahed {wave_lbl}-{dr['idx']} [AI-APPROACH]",
+                    f"<b>AI/CV-guided Shahed-136</b> wave {wave_lbl} #{dr['idx']}<br/>"
+                    f"From: {dr['site_name']} | Dist: {dist_km:.0f} km<br/>"
+                    f"Phase 1 dead-reckoning: {dist_km - lock_km:.0f} km ({lock_frac*100:.0f}%)<br/>"
+                    f"EO/IR lock-on at: {lock_km:.0f} km — T+{lock_t/60:.1f} min",
+                    altitude_mode="relativeToGround"
+                ))
+                kml.extend(gx_track(
+                    "kharg_shahed_ai_terminal", term_arc, t_term,
+                    f"Shahed {wave_lbl}-{dr['idx']} [AI-TERMINAL]",
+                    f"<b>AI TERMINAL LOCK-ON</b> — computer-vision guidance<br/>"
+                    f"Acquired at {lock_km:.0f} km — T+{lock_t/60:.1f} min<br/>"
+                    f"Impact T+{t_term_end/60:.1f} min | <b>CIWS defeated</b>",
+                    altitude_mode="relativeToGround"
+                ))
+                kml.append(
+                    f'  <Placemark><name>AI IMPACT {wave_lbl}-{dr["idx"]}</name>'
+                    f'<styleUrl>#kharg_impact</styleUrl>'
+                    f'<description><![CDATA[<b>AI-guided Shahed impact</b><br/>'
+                    f'From: {dr["site_name"]} | EO/IR lock at {lock_km:.0f} km<br/>'
+                    f'Impact T+{t_term_end/60:.1f} min]]></description>'
+                    f'<TimeStamp><when>{_ts(t_term_end)}</when></TimeStamp>'
+                    f'<Point><coordinates>{ai_lon:.5f},{ai_lat:.5f},0</coordinates>'
+                    f'</Point></Placemark>\n'
+                )
+
+            else:
+                # ── Standard breakthrough: sampled 15% for GE performance ─────
+                if drone_vis_rng.random() > DRONE_SAMPLE:
+                    continue   # skip rendering; drone is in stats but not visualised
+                full_arc  = arc_points(s_lon, s_lat, i_lon, i_lat, SHAHED_PEAK, N_ARC, True)
+                t_arc_pts = [launch_s + (k / N_ARC) * flight_s for k in range(N_ARC + 1)]
+                kml.extend(gx_track(
+                    "kharg_shahed", full_arc, t_arc_pts,
+                    f"Shahed {wave_lbl}-{dr['idx']} [BREAKTHROUGH]",
+                    f"Shahed-136 wave {wave_lbl} #{dr['idx']}<br/>"
+                    f"From: {dr['site_name']} | Dist: {dist_km:.0f} km<br/>"
+                    f"Speed: {SHAHED_SPD_KS*3600:.0f} km/h | Impact T+{impact_s/60:.1f} min",
+                    altitude_mode="relativeToGround"
+                ))
+                kml.append(
+                    f'  <Placemark><name>Impact {wave_lbl}-{dr["idx"]}</name>'
+                    f'<styleUrl>#kharg_impact</styleUrl>'
+                    f'<description><![CDATA[Shahed-136 impact<br/>'
+                    f'Wave {wave_lbl} #{dr["idx"]} | CEP {SHAHED_CEP_M:.0f} m<br/>'
+                    f'T+{impact_s/60:.1f} min]]></description>'
+                    f'{_tspan(impact_s, impact_s + 90)}'
+                    f'<Point><coordinates>{i_lon:.5f},{i_lat:.5f},0</coordinates>'
+                    f'</Point></Placemark>\n'
+                )
+
+        kml.append('  </Folder>\n')
+    kml.append('  </Folder>\n')
+
+    # ── Lanchester ground battle timeline placemarks ──────────────────────────
+    kml.append('  <Folder><name>Ground Battle (Lanchester Square Law)</name>\n'
+               '  <!-- Attrition model: USMC vs. IRGC — Marines 3.2× combat effectiveness -->\n')
+    for li in range(len(lanc_states) - 1):
+        lt0, lm0, lb0, _navy_act0 = lanc_states[li]
+        lt1 = lanc_states[li + 1][0]
+        marine_cas_step = USMC_START - lm0
+        irgc_cas_step   = IRGC_START - lb0
+        elapsed_min     = (lt0 - last_arrive_s) / 60
+        navy_row = (f'<tr><td style="color:#ffaa00">USN Reserve</td>'
+                    f'<td>{round(lN):,}</td>'
+                    f'<td style="color:orange">{NAVY_RESERVE - round(lN):,}</td></tr>'
+                    if _navy_act0 else '')
+        kml.append(
+            f'  <Placemark>'
+            f'<name>Battle T+{elapsed_min:.0f}min — {"USN" if _navy_act0 else "Marines"} {lm0 if not _navy_act0 else round(lN):,} / IRGC {lb0:,}</name>'
+            f'<description><![CDATA['
+            f'<b>Ground Battle — T+{elapsed_min:.0f} min after all Marines ashore</b><br/>'
+            + (f'<b style="color:orange">⚠ Navy reserve activated — Marines eliminated</b><br/>' if _navy_act0 else '')
+            + f'<table border="1" cellpadding="3" style="border-collapse:collapse">'
+            f'<tr><th>Force</th><th>Strength</th><th>Casualties</th></tr>'
+            f'<tr><td>USMC</td><td>{lm0:,}</td><td style="color:orange">{marine_cas_step}</td></tr>'
+            + navy_row
+            + f'<tr><td>IRGC</td><td>{lb0:,}</td><td style="color:red">{irgc_cas_step}</td></tr>'
+            f'</table><br/>'
+            f'Lanchester effectiveness: α_M={ALPHA_M:.1e}  β_I={BETA_I:.1e}<br/>'
+            f'Marine advantage ratio: {ALPHA_M/BETA_I:.1f}×'
+            f']]></description>'
+            f'<styleUrl>#sty_battle</styleUrl>'
+            f'{_tspan(lt0, lt1)}'
+            f'<Point><coordinates>{KHARG_LON + 0.015:.6f},{KHARG_LAT + 0.015:.6f},0'
+            f'</coordinates></Point></Placemark>\n'
+        )
+    kml.append('  </Folder>\n')
+
+    # ── Outcome summary placemark ──────────────────────────────────────────────
+    total_rt = N_WAVES * (N_MV22 + N_CH53)   # approximate round trips
+    total_marine_cas = kia_total + wia_total + lanc_marine_cas
+    kml.append(
+        f'  <Placemark><name>Operation Kharg Island — Final Assessment</name>'
+        f'<description><![CDATA['
+        f'<b>Operation Kharg Island — Final Assessment</b><br/><br/>'
+        f'<table border="1" cellpadding="4" style="border-collapse:collapse">'
+        f'<tr><th colspan="2">Air Assault (LHA-7 USS Tripoli)</th></tr>'
+        f'<tr><td>Marines landed</td><td><b>{TOTAL_MARINES:,}</b></td></tr>'
+        f'<tr><td>Fireteams ({MARINES_PER_SQUAD}-man)</td><td>{N_SQUADS:,}</td></tr>'
+        f'<tr><td>Sortie waves</td><td>{N_WAVES}</td></tr>'
+        f'<tr><td>Helicopter round trips</td><td>~{total_rt}</td></tr>'
+        f'<tr><td>All ashore by</td><td>T+{last_arrive_s/60:.0f} min</td></tr>'
+        f'<tr><th colspan="2">Shahed-136 Counterattack ({n_launched:,} drones, 5 waves)</th></tr>'
+        f'<tr><td>AI-guided (CV, 5%)</td><td>{n_ai}</td></tr>'
+        f'<tr><td>Stinger rounds available</td><td>{STINGER_MAG}</td></tr>'
+        f'<tr><td>Stinger rounds fired</td><td>{stinger_fired} (mag dry at drone #{STINGER_MAG})</td></tr>'
+        f'<tr><td>Intercepted (Pk={STINGER_PK*100:.0f}% — DoD optest baseline)</td><td style="color:green">{stinger_hits}</td></tr>'
+        f'<tr><td>Unengaged (no rounds left)</td><td style="color:red">{n_bt - n_ai}</td></tr>'
+        f'<tr><td>Total breakthroughs</td><td style="color:orange">{n_bt}</td></tr>'
+        f'<tr><th colspan="2">F-35B Strike Package ({N_F35B} aircraft)</th></tr>'
+        f'<tr><td>SEAD aircraft</td><td>{N_F35B_SEAD} (AGM-88E AARGM)</td></tr>'
+        f'<tr><td>AGM-88E AARGM fired</td>'
+        f'<td style="color:cyan"><b>{f35b_agm88_hits}</b> '
+        f'(targets: HAWK SAM, ZSU-23-4 ×2, MANPADS)</td></tr>'
+        f'<tr><td>CAS aircraft</td><td>{N_F35B_CAS} ({F35B_SORTIES} sorties each)</td></tr>'
+        f'<tr><td>GBU-38 JDAM delivered</td>'
+        f'<td style="color:#ffaa00"><b>{f35b_jdam_hits}</b> '
+        f'(CEP {F35B_CEP_M:.0f} m, 500 lb each)</td></tr>'
+        f'<tr><td>Total precision weapons</td>'
+        f'<td><b>{f35b_total_weapons}</b></td></tr>'
+        f'<tr><th colspan="2">Helicopter Losses (AI drone proximity)</th></tr>'
+        f'<tr><td>Aircraft downed</td><td style="color:red"><b>{n_helos_lost}</b> of {len(all_helo_ids)}</td></tr>'
+        f'<tr><td>Marines not delivered</td><td style="color:orange">{marines_not_delivered:,}</td></tr>'
+        f'<tr><td>Marines actually landed</td><td><b>{total_marines_actual:,}</b></td></tr>'
+        f'<tr><td>Fireteams eliminated</td><td style="color:red"><b>{n_killed}</b> ({kia_total} KIA)</td></tr>'
+        f'<tr><td>Fireteams damaged</td><td style="color:orange">{n_damaged} ({wia_total} WIA)</td></tr>'
+        f'<tr><td>Fireteams intact</td><td style="color:green">{n_intact}</td></tr>'
+        f'<tr><th colspan="2">Ground Battle — Lanchester Square Law</th></tr>'
+        f'<tr><td>IRGC start</td><td>{IRGC_START:,} (incl. weighted Basij)</td></tr>'
+        f'<tr><td>IRGC casualties</td><td style="color:red">{lanc_irgc_cas:,}</td></tr>'
+        f'<tr><td>IRGC survivors</td><td>{lanc_irgc_final:,}</td></tr>'
+        f'<tr><td>Marine ground KIA (combat)</td><td style="color:orange">{lanc_marine_cas:,}</td></tr>'
+        f'<tr><td>Marine survivors</td><td>{lanc_marine_final:,}</td></tr>'
+        f'<tr><th colspan="2">Total USMC Casualties</th></tr>'
+        f'<tr><td>Drone KIA</td><td style="color:red">{kia_total}</td></tr>'
+        f'<tr><td>Drone WIA</td><td style="color:orange">{wia_total}</td></tr>'
+        f'<tr><td>Ground combat KIA</td><td style="color:red">{lanc_marine_cas:,}</td></tr>'
+        f'<tr><td><b>TOTAL CASUALTIES</b></td><td style="color:red"><b>{total_marine_cas:,}</b></td></tr>'
+        f'</table><br/>'
+        f'<i>Fireteam colours: green=full HP  yellow=3HP  orange=1-2HP  red=KIA</i>'
+        f']]></description>'
+        f'<styleUrl>#sty_marine</styleUrl>'
+        f'<Point><coordinates>{KHARG_LON:.6f},{KHARG_LAT:.6f},0</coordinates>'
+        f'</Point></Placemark>\n'
+    )
+
+    kml.append('</Document>\n</kml>')
+
+    # ── Write KMZ ─────────────────────────────────────────────────────────────
+    if out_dir is None:
+        out_dir = os.path.dirname(os.path.abspath(__file__))
+    out_path = os.path.join(out_dir, OUT_FILENAME)
+    with _zf.ZipFile(out_path, "w", _zf.ZIP_DEFLATED) as zf:
+        zf.writestr("doc.kml", "".join(kml).encode("utf-8"))
+
+    # ── Write HTML summary ────────────────────────────────────────────────────
+    html_filename = OUT_FILENAME.replace(".kmz", ".html")
+    html_path = os.path.join(out_dir, html_filename)
+    kmz_link  = OUT_FILENAME
+    _gen_ts   = fmt_time(sim_time(0))[:10]   # date string
+
+    def _pct_color(pct, invert=False):
+        """Green→amber→red gradient as hex colour, based on percentage 0-100."""
+        v = pct / 100.0
+        if invert:
+            v = 1.0 - v
+        r = min(255, int(v * 510))
+        g = min(255, int((1.0 - v) * 510))
+        b = 0
+        return f"#{r:02x}{g:02x}{b:02x}"
+
+    def _card(label, value, sub, color="#3399ff"):
+        return (f'<div class="card" style="border-top-color:{color}">'
+                f'<div class="card-label">{label}</div>'
+                f'<div class="card-value" style="color:{color}">{value}</div>'
+                f'<div class="card-sub">{sub}</div></div>\n')
+
+    breach_pct = 100 * n_bt / max(n_launched, 1)
+    int_pct    = 100 * n_intercepted / max(n_launched, 1)
+
+    rows = [
+        ("Marines landed", f"{total_marines_actual:,}", "#00dd66"),
+        ("Drone breakthroughs", f"{n_bt:,} ({breach_pct:.0f}%)", _pct_color(breach_pct)),
+        ("USMC KIA (drone)", f"{kia_total:,}", "#ff4444"),
+        ("USMC WIA (drone)", f"{wia_total:,}", "#ffaa00"),
+        ("IRGC casualties", f"{lanc_irgc_cas:,}", "#00dd66"),
+        ("USMC ground KIA", f"{lanc_marine_cas:,}", "#ff4444"),
+        ("F-35B weapons", f"{f35b_total_weapons}", "#3399ff"),
+        ("Helicopters lost", f"{n_helos_lost}", "#ff4444" if n_helos_lost else "#00dd66"),
+    ]
+
+    html_parts = [
+        "<!DOCTYPE html><html lang='en'><head>"
+        "<meta charset='utf-8'>"
+        "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+        f"<title>Kharg Island Assault — {SCENARIO_LABEL}</title>\n",
+        "    <style>\n"
+        "      *{box-sizing:border-box;margin:0;padding:0}\n"
+        "      body{background:#000000;color:#ffffff;font-family:'Courier New',Courier,monospace;"
+        "font-size:12px;line-height:1.55;-webkit-font-smoothing:antialiased}\n"
+        "      a{color:#3399ff;text-decoration:none;transition:color .15s}"
+        " a:hover{color:#66bbff;text-decoration:underline}\n"
+        "      h1{color:#3399ff;font-size:20px;margin-bottom:4px;letter-spacing:2px;"
+        "text-shadow:0 0 18px #3399ff55}\n"
+        "      h2{color:#3399ff;font-size:13px;margin:20px 0 6px;"
+        "border-bottom:1px solid #333333;padding-bottom:5px;"
+        "letter-spacing:2px;text-transform:uppercase}\n"
+        "      .wrap{max-width:1200px;margin:0 auto;padding:20px 24px}\n"
+        "      .ts{color:#777777;font-size:10px;margin-bottom:16px;letter-spacing:.3px}\n"
+        "      .topbar{background:#000000;border-bottom:2px solid #3399ff;"
+        "border-left:3px solid #3399ff;padding:10px 24px;"
+        "margin:-20px -24px 20px;display:flex;align-items:center;gap:16px}\n"
+        "      .topbar-title{color:#3399ff;font-size:13px;font-weight:bold;"
+        "letter-spacing:2px;flex:1}\n"
+        "      .topbar-sub{color:#aaaaaa;font-size:10px}\n"
+        "      .cards{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}\n"
+        "      .card{background:#0a0a0a;border:1px solid #333333;border-radius:0;"
+        "padding:12px 16px;min-width:148px;flex:1 1 148px;"
+        "border-top:3px solid transparent;border-left:3px solid #3399ff33;"
+        "transition:border-color .2s}\n"
+        "      .card:hover{border-top-color:#3399ff;border-left-color:#3399ff}\n"
+        "      .card-label{color:#aaaaaa;font-size:9px;text-transform:uppercase;"
+        "letter-spacing:2px}\n"
+        "      .card-value{font-size:20px;font-weight:bold;margin-top:3px;"
+        "letter-spacing:-.5px}\n"
+        "      .card-sub{color:#777777;font-size:9px;margin-top:1px}\n"
+        "      .tbl-wrap{overflow-x:auto;margin-bottom:18px;"
+        "border:1px solid #333333;border-left:3px solid #3399ff}\n"
+        "      table{border-collapse:collapse;width:100%;font-size:11px}\n"
+        "      thead{position:sticky;top:0;z-index:2}\n"
+        "      th{color:#aaaaaa;text-align:left;padding:6px 12px;"
+        "background:#0a0a0a;border-bottom:2px solid #3399ff;"
+        "font-weight:bold;letter-spacing:1px}\n"
+        "      td{padding:5px 12px;border-bottom:1px solid #111111;"
+        "transition:background .1s;color:#ffffff}\n"
+        "      tr:hover td{background:#0a0a0a}\n"
+        "      tr:nth-child(even) td{background:#080808}\n"
+        "      .val{font-family:'Courier New',monospace;text-align:right}\n"
+        "      .desc{background:#000000;border-left:3px solid #3399ff;"
+        "border-top:2px solid #3399ff;"
+        "padding:12px 16px;margin-bottom:16px;"
+        "font-size:11px;color:#aaaaaa;line-height:1.65}\n"
+        "      .section-header{display:flex;align-items:center;gap:8px;margin:22px 0 8px;"
+        "border-left:3px solid #3399ff;padding-left:10px}\n"
+        "      .section-header::after{content:'';flex:1;height:1px;background:#333333}\n"
+        "      .section-title{color:#3399ff;font-size:13px;font-weight:bold;"
+        "letter-spacing:2px;text-transform:uppercase;white-space:nowrap}\n"
+        "      .footer{margin-top:28px;padding-top:10px;border-top:1px solid #333333;"
+        "color:#777777;font-size:10px;letter-spacing:.3px}\n"
+        "      .badge{display:inline-block;padding:2px 8px;border-radius:0;"
+        "font-size:10px;font-weight:bold;letter-spacing:1px}\n"
+        "      .total-row td{background:#0a0a0a!important;font-weight:bold;"
+        "border-top:2px solid #3399ff!important;color:#3399ff!important}\n"
+        "    </style></head><body><div class='wrap'>\n",
+        # topbar
+        f"<div class='topbar'>"
+        f"<span class='topbar-title'>◈ OPERATION KHARG ISLAND — {SCENARIO_LABEL.upper()}</span>"
+        f"<span class='topbar-sub'>Simulation start: {_gen_ts} &nbsp;·&nbsp; "
+        f"<a href='{kmz_link}'>Open in Google Earth →</a></span></div>\n",
+        f"<h1>Operation Kharg Island — {SCENARIO_LABEL}</h1>\n"
+        f"<div class='ts'>Simulation generated {_gen_ts} &nbsp;·&nbsp; "
+        f"<a href='summary.html'>← All-scenario summary</a></div>\n",
+        # scenario description
+        "<div class='desc'>"
+        "<b>USMC amphibious assault on Kharg Island</b> — Iran's primary crude export terminal. "
+        f"LHA-7 USS Tripoli leads the Amphibious Ready Group with "
+        f"{N_MV22}× MV-22B Osprey, {N_CH53}× CH-53E Super Stallion, "
+        f"{N_AH1Z}× AH-1Z Viper, and <b>{N_F35B}× F-35B Lightning II</b>. "
+        f"Iran responds with {DRONE_TOTAL:,} Shahed-136 loitering munitions in "
+        f"{len(DRONE_WAVES)} waves from {len(D_SITES)} launch sites. "
+        f"F-35Bs execute pre-assault SEAD ({N_F35B_SEAD} aircraft, "
+        f"{N_F35B_SEAD*AGM88_PER_SEAD}× AGM-88E AARGM against radar/AAA sites) "
+        f"then {F35B_SORTIES}-wave CAS ({N_F35B_CAS} aircraft, "
+        f"{N_F35B_CAS*GBU38_PER_CAS*F35B_SORTIES}× GBU-38 JDAM, CEP {F35B_CEP_M:.0f} m)."
+        "</div>\n",
+        # stat cards
+        "<div class='cards'>\n",
+        _card("Marines landed", f"{total_marines_actual:,}", f"of {TOTAL_MARINES:,} planned",
+              "#00dd66" if total_marines_actual == TOTAL_MARINES else "#ffaa00"),
+        _card("Waves / cycle time", f"{N_WAVES}", f"{WAVE_CYCLE_S/60:.0f} min/wave", "#3399ff"),
+        _card("Shahed breakthroughs", f"{n_bt:,}", f"{breach_pct:.0f}% penetration rate",
+              _pct_color(breach_pct)),
+        _card("Stinger intercepts", f"{n_intercepted}", f"Pk {STINGER_PK*100:.0f}% / {STINGER_MAG} rounds",
+              "#00dd66"),
+        _card("USMC KIA (drones)", f"{kia_total}", "fireteams eliminated",
+              "#ff4444" if kia_total else "#00dd66"),
+        _card("IRGC casualties", f"{lanc_irgc_cas:,}", f"of {N_IRGC:,} defenders", "#00dd66"),
+        _card("F-35B weapons", f"{f35b_total_weapons}",
+              f"{f35b_agm88_hits}× AGM-88E + {f35b_jdam_hits}× GBU-38", "#3399ff"),
+        _card("Helicopters lost", f"{n_helos_lost}",
+              f"of {len(all_helo_ids)} aircraft",
+              "#ff4444" if n_helos_lost else "#00dd66"),
+        "</div>\n",
+        # F-35B detail table
+        "<div class='section-header'><span class='section-title'>F-35B Strike Package</span></div>\n"
+        "<div class='tbl-wrap'><table><thead><tr>"
+        "<th>Package</th><th>Aircraft</th><th>Weapons</th><th>Weapon type</th>"
+        "<th>CEP</th><th>Warhead</th><th>Targets</th></tr></thead><tbody>\n"
+        f"<tr><td>SEAD Wave</td><td class='val'>{N_F35B_SEAD}</td>"
+        f"<td class='val' style='color:#ff4444'>{f35b_agm88_hits}</td>"
+        f"<td>AGM-88E AARGM</td><td class='val'>5 m</td>"
+        f"<td>WDU-21/B 146 kg</td>"
+        f"<td>HAWK SAM · ZSU-23-4 ×2 · MANPADS</td></tr>\n"
+        f"<tr><td>CAS Wave 1</td><td class='val'>{N_F35B_CAS}</td>"
+        f"<td class='val' style='color:#ffaa00'>{N_F35B_CAS*GBU38_PER_CAS}</td>"
+        f"<td>GBU-38 JDAM 500 lb</td><td class='val'>{F35B_CEP_M:.0f} m</td>"
+        f"<td>Mk-82 89 kg H-6</td>"
+        f"<td>IRGC HQ · command nodes · infantry</td></tr>\n"
+        f"<tr><td>CAS Wave 2</td><td class='val'>{N_F35B_CAS}</td>"
+        f"<td class='val' style='color:#ffaa00'>{N_F35B_CAS*GBU38_PER_CAS}</td>"
+        f"<td>GBU-38 JDAM 500 lb</td><td class='val'>{F35B_CEP_M:.0f} m</td>"
+        f"<td>Mk-82 89 kg H-6</td>"
+        f"<td>Armour · ammo cache · reinforcements</td></tr>\n"
+        f"<tr class='total-row'><td><b>TOTAL</b></td>"
+        f"<td class='val'><b>{N_F35B}</b></td>"
+        f"<td class='val'><b>{f35b_total_weapons}</b></td>"
+        f"<td colspan='4' style='color:#7fa8cc'>"
+        f"All weapons individually targetable in Google Earth</td></tr>\n"
+        "</tbody></table></div>\n",
+        # assault table
+        "<div class='section-header'><span class='section-title'>Assault Timeline</span></div>\n"
+        "<div class='tbl-wrap'><table><thead><tr>"
+        "<th>Event</th><th>Time</th><th>Detail</th></tr></thead><tbody>\n",
+    ]
+    html_parts.append(
+        f"<tr><td>F-35B SEAD departs</td>"
+        f"<td class='val'>T{F35B_SEAD_DEP_S/60:+.0f} min</td>"
+        f"<td>4× F-35B launch AGM-88E vs. HAWK SAM + ZSU-23-4 + MANPADS</td></tr>\n"
+        f"<tr><td>SEAD on target</td>"
+        f"<td class='val'>T{(F35B_SEAD_DEP_S + T_F35B_TO_FIRE + 120)/60:+.0f} min</td>"
+        f"<td>{f35b_agm88_hits}× AGM-88E impact — air-defence suppressed</td></tr>\n"
+        f"<tr><td>F-35B CAS departs</td>"
+        f"<td class='val'>T{F35B_CAS1_DEP_S/60:+.0f} min</td>"
+        f"<td>16× F-35B depart for CAS wave 1</td></tr>\n"
+        f"<tr><td>Helo wave 1 departs</td>"
+        f"<td class='val'>T+0 min</td>"
+        f"<td>{N_MV22}× MV-22B + {N_CH53}× CH-53E + {N_AH1Z}× AH-1Z depart LHA-7</td></tr>\n"
+        f"<tr><td>Wave 1 lands</td>"
+        f"<td class='val'>T+{wave_arrive_s[0]/60:.0f} min</td>"
+        f"<td>{TROOPS_PER_WAVE:,} Marines ashore | F-35B CAS overhead</td></tr>\n"
+        f"<tr><td>Shahed wave α launches</td>"
+        f"<td class='val'>T+{(BASE_LAUNCH)/60:.0f} min</td>"
+        f"<td>{DRONE_WAVES[0][1]} Shahed-136 from Iranian mainland sites</td></tr>\n"
+        f"<tr><td>Last helo wave lands</td>"
+        f"<td class='val'>T+{last_arrive_s/60:.0f} min</td>"
+        f"<td>{total_marines_actual:,} Marines ashore | ground battle begins</td></tr>\n"
+        f"<tr><td>CAS wave 2 departs</td>"
+        f"<td class='val'>T{F35B_CAS2_DEP_S/60:+.0f} min</td>"
+        f"<td>16× F-35B rearm + redeploy for sortie 2</td></tr>\n"
+        f"<tr><td>Simulation end</td>"
+        f"<td class='val'>T+{SIM_END_S/60:.0f} min</td>"
+        f"<td>2 h after final wave — IRGC {lanc_irgc_final:,} survivors, "
+        f"USMC {lanc_marine_final:,} effective</td></tr>\n"
+    )
+    html_parts.append(
+        "</tbody></table></div>\n"
+        "<div class='section-header'>"
+        "<span class='section-title'>Shahed Counterattack</span></div>\n"
+        "<div class='tbl-wrap'><table><thead><tr>"
+        "<th>Metric</th><th class='val'>Value</th><th>Notes</th></tr></thead><tbody>\n"
+        f"<tr><td>Total launched</td><td class='val'>{n_launched:,}</td>"
+        f"<td>{len(DRONE_WAVES)} waves, {len(D_SITES)} launch sites</td></tr>\n"
+        f"<tr><td>AI/CV-guided (5%)</td><td class='val'>{n_ai}</td>"
+        f"<td>Guaranteed breakthrough; precision terminal seeker</td></tr>\n"
+        f"<tr><td>Stinger rounds fired</td><td class='val'>{stinger_fired}</td>"
+        f"<td>Magazine dry after drone #{STINGER_MAG}</td></tr>\n"
+        f"<tr><td style='color:#00dd66'>Intercepted</td>"
+        f"<td class='val' style='color:#00dd66'>{n_intercepted}</td>"
+        f"<td>Pk {STINGER_PK*100:.0f}% (DoD operational test baseline)</td></tr>\n"
+        f"<tr><td style='color:#ff4444'>Breakthroughs</td>"
+        f"<td class='val' style='color:#ff4444'><b>{n_bt}</b></td>"
+        f"<td>Unengaged: {n_bt - n_ai} | AI-guided: {n_ai}</td></tr>\n"
+        f"<tr><td>Fireteams KIA</td>"
+        f"<td class='val' style='color:#ff4444'>{n_killed}</td>"
+        f"<td>{kia_total} Marines (complete fireteam destruction)</td></tr>\n"
+        f"<tr><td>Fireteams damaged</td>"
+        f"<td class='val' style='color:#ffaa00'>{n_damaged}</td>"
+        f"<td>{wia_total} WIA</td></tr>\n"
+        "</tbody></table></div>\n"
+        "<div class='footer'>"
+        "Sources: NAVAIR F-35B STOVL fact sheet · USMC MAGTF Handbook 2025 · "
+        "IISS Military Balance 2024 · Jane's All the World's Aircraft · "
+        "DoD GAO-02-407T (Stinger Pk) · RAND MG-1104 · Dupuy Institute (2018)"
+        "</div>\n"
+        "</div></body></html>"
+    )
+    with open(html_path, "w", encoding="utf-8") as hf:
+        hf.write("".join(html_parts))
+
+    return out_path, N_WAVES, TROOPS_PER_WAVE, TOTAL_MARINES, WAVE_CYCLE_S
+
+
+# ============================================================
+# KHARG ISLAND BALLISTIC STRIKE SCENARIO
+# ============================================================
+
+def generate_kharg_ballistic_kml(out_dir=None):
+    """
+    KML/KMZ: Iranian ballistic missile strike on the Kharg Island assault fleet
+    and oil terminal infrastructure, timed to coincide with the USMC beach landing.
+
+    Scenario
+    --------
+    Iran detects the amphibious assault at T+15 min and fires 22 ballistic
+    missiles from three mainland sites:
+      - 8 × Khalij Fars ASBM  → USS Tripoli (LHA-7) + DDG escort
+      - 6 × Fateh-313 SRBM    → Kharg Island oil terminal / pipeline manifold
+      - 4 × Zolfaghar SRBM    → Kharg Island storage tanks / loading jetty
+      - 4 × Emad MRBM         → secondary fleet targets (LPD-29, LPD-30)
+
+    US defense: DDG SM-6 (30 rounds), Tripoli SeaRAM (22 rounds), Phalanx CIWS.
+    Expected intercepts: ~13 / ~22 (59%).  Expected hits: ~9.
+
+    Blast radii (Hopkinson-Cranz scaling, 450–750 kg TNT-equivalent warheads):
+      Fateh-313 / Zolfaghar (450 kg):
+        Inner ring  (structural kill)   : r ≈  50 m   — red   filled polygon
+        Middle ring (significant damage): r ≈ 150 m   — orange outline
+        Outer ring  (overpressure zone) : r ≈ 300 m   — yellow outline
+      Emad MRBM (750 kg warhead):
+        Inner ring:  r ≈  65 m
+        Middle ring: r ≈ 185 m
+        Outer ring:  r ≈ 380 m
+      Oil-fire spread (secondary fires at infrastructure hits):
+        Burn radius : r ≈ 200 m   — translucent red fill
+
+    Sources: Glasstone & Dolan, "Effects of Nuclear Weapons" blast scaling
+    adapted for conventional HE; Jane's Defence Weekly blast effect tables;
+    open-source JDAM/TLAM collateral damage estimates (1,000 ft CEP ring).
+    """
+    import math as _math
+    import zipfile as _zf
+    import random as _rand
+    import os as _os
+
+    rng = _rand.Random(73)
+
+    # ── Geography ─────────────────────────────────────────────────────────────
+    LHA_LON,    LHA_LAT    = 50.325,  28.715   # USS Tripoli NW approach position
+    DDG_LON,    DDG_LAT    = 50.325,  28.855   # DDG escort
+    LPD1_LON,   LPD1_LAT   = 50.175,  28.690   # LPD-30
+    LPD2_LON,   LPD2_LAT   = 50.475,  28.690   # LPD-29
+
+    # Iranian launch sites (inland + coastal)
+    BUSHEHR_LON, BUSHEHR_LAT  = 50.843, 28.923   # Bushehr AB
+    SHIRAZ_LON,  SHIRAZ_LAT   = 52.589, 29.547   # Shiraz missile brigade
+    BANDAR_LON,  BANDAR_LAT   = 56.273, 27.218   # Bandar Abbas coastal battery
+
+    def _ts(offset_s):
+        h  = int(offset_s // 3600)
+        m  = int((offset_s % 3600) // 60)
+        s  = int(offset_s % 60)
+        return f"2026-03-18T{6+h:02d}:{m:02d}:{s:02d}Z"
+
+    # ── Blast radius circle generator ─────────────────────────────────────────
+    def _circle_coords(lon, lat, radius_m, n_pts=60):
+        """KML coordinate string for a circle polygon around (lon, lat)."""
+        pts = []
+        for i in range(n_pts + 1):
+            angle = 2.0 * _math.pi * i / n_pts
+            dlat  = (radius_m / 111_000.0) * _math.cos(angle)
+            dlon  = (radius_m / (111_000.0 * _math.cos(_math.radians(lat)))) * _math.sin(angle)
+            pts.append(f"{lon + dlon:.6f},{lat + dlat:.6f},0")
+        return " ".join(pts)
+
+    def _blast_rings_kml(lon, lat, warhead_kg, label, appear_time, is_oil_target=False):
+        """Three concentric blast damage rings + optional oil-fire ring."""
+        # Scale radii by Hopkinson-Cranz W^(1/3) relative to 450 kg reference
+        scale = (warhead_kg / 450.0) ** (1.0 / 3.0)
+        r_inner  = int(50  * scale)   # structural kill / crater
+        r_mid    = int(150 * scale)   # significant damage
+        r_outer  = int(300 * scale)   # overpressure / light damage
+        r_fire   = 200                 # secondary oil fire (fixed radius)
+
+        rings = []
+        # Impact marker
+        rings.append(f"""  <Placemark>
+    <name>{label} — Impact</name>
+    <TimeSpan><begin>{appear_time}</begin></TimeSpan>
+    <styleUrl>#blast_impact</styleUrl>
+    <Point><coordinates>{lon:.6f},{lat:.6f},0</coordinates></Point>
+  </Placemark>""")
+        # Inner: structural kill — red fill
+        rings.append(f"""  <Placemark>
+    <name>{label} — Structural Kill r≈{r_inner}m</name>
+    <TimeSpan><begin>{appear_time}</begin></TimeSpan>
+    <styleUrl>#blast_inner</styleUrl>
+    <Polygon><outerBoundaryIs><LinearRing>
+      <coordinates>{_circle_coords(lon, lat, r_inner)}</coordinates>
+    </LinearRing></outerBoundaryIs></Polygon>
+  </Placemark>""")
+        # Middle: significant damage — orange outline
+        rings.append(f"""  <Placemark>
+    <name>{label} — Significant Damage r≈{r_mid}m</name>
+    <TimeSpan><begin>{appear_time}</begin></TimeSpan>
+    <styleUrl>#blast_mid</styleUrl>
+    <Polygon><outerBoundaryIs><LinearRing>
+      <coordinates>{_circle_coords(lon, lat, r_mid)}</coordinates>
+    </LinearRing></outerBoundaryIs></Polygon>
+  </Placemark>""")
+        # Outer: overpressure — yellow outline
+        rings.append(f"""  <Placemark>
+    <name>{label} — Overpressure r≈{r_outer}m</name>
+    <TimeSpan><begin>{appear_time}</begin></TimeSpan>
+    <styleUrl>#blast_outer</styleUrl>
+    <Polygon><outerBoundaryIs><LinearRing>
+      <coordinates>{_circle_coords(lon, lat, r_outer)}</coordinates>
+    </LinearRing></outerBoundaryIs></Polygon>
+  </Placemark>""")
+        if is_oil_target:
+            rings.append(f"""  <Placemark>
+    <name>{label} — Secondary Oil Fire r≈{r_fire}m</name>
+    <TimeSpan><begin>{appear_time}</begin></TimeSpan>
+    <styleUrl>#blast_fire</styleUrl>
+    <Polygon><outerBoundaryIs><LinearRing>
+      <coordinates>{_circle_coords(lon, lat, r_fire)}</coordinates>
+    </LinearRing></outerBoundaryIs></Polygon>
+  </Placemark>""")
+        return "\n".join(rings)
+
+    # ── Ballistic arc generator ────────────────────────────────────────────────
+    def _ballistic_arc_kml(src_lon, src_lat, tgt_lon, tgt_lat, launch_s, flight_s,
+                            style_id, label, n_segs=12):
+        """Parabolic arc KML track from source to target."""
+        peak_alt = 180_000.0  # ~180 km apogee for MRBM
+        segs = []
+        for k in range(n_segs + 1):
+            frac    = k / n_segs
+            # Linear interpolation in 2D
+            lon_k   = src_lon + frac * (tgt_lon - src_lon)
+            lat_k   = src_lat + frac * (tgt_lat - src_lat)
+            alt_k   = peak_alt * 4 * frac * (1 - frac)   # parabolic altitude
+            t_k     = launch_s + frac * flight_s
+            segs.append(f"      <when>{_ts(t_k)}</when>\n"
+                        f"      <gx:coord>{lon_k:.6f} {lat_k:.6f} {alt_k:.0f}</gx:coord>")
+        track_body = "\n".join(segs)
+        return (f"  <Placemark><name>{label}</name>"
+                f"<styleUrl>#{style_id}</styleUrl>"
+                f"<TimeSpan><begin>{_ts(launch_s)}</begin>"
+                f"<end>{_ts(launch_s + flight_s + 120)}</end></TimeSpan>"
+                f"<gx:Track><altitudeMode>absolute</altitudeMode>\n"
+                f"{track_body}\n  </gx:Track></Placemark>")
+
+    # ── Missile definitions ────────────────────────────────────────────────────
+    # (name, src_lon, src_lat, tgt_lon, tgt_lat, launch_s, warhead_kg, speed_km_s,
+    #  is_intercepted, is_oil_target, style_id)
+    SPEED_SRBM = 3.0    # km/s terminal (Mach ~9)
+    SPEED_MRBM = 4.5    # km/s terminal (Mach ~13)
+
+    # Oil terminal (NW jetty): 50.315, 29.250
+    # Storage tanks (central): 50.330, 29.252
+    # Loading manifold (W): 50.318, 29.248
+    # Pipeline junction (SE): 50.335, 29.244
+    OIL_TARGETS = [
+        (50.315, 29.250, "Oil Terminal NW Jetty",    True),
+        (50.330, 29.252, "Oil Tank Farm Central",    True),
+        (50.318, 29.248, "Pipeline Loading Manifold",True),
+        (50.335, 29.244, "Pipeline Junction SE",     True),
+    ]
+    FLEET_TARGETS = [
+        (LHA_LON, LHA_LAT, "USS Tripoli (LHA-7) — Flight Deck"),
+        (LHA_LON + 0.01, LHA_LAT - 0.01, "USS Tripoli — Secondary Hit"),
+        (DDG_LON, DDG_LAT, "DDG Escort — CIC Structure"),
+        (DDG_LON + 0.005, DDG_LAT, "DDG Escort — VLS Magazine"),
+        (LPD2_LON, LPD2_LAT, "LPD-29 — Well Deck"),
+        (LPD1_LON, LPD1_LAT, "LPD-30 — Flight Deck"),
+    ]
+
+    missiles = []
+    # Khalij Fars ASBM (8 rounds) — anti-ship, 450 kg, from Bushehr
+    for idx, (tlon, tlat, tlbl) in enumerate(FLEET_TARGETS):
+        dist = haversine_km(BUSHEHR_LON, BUSHEHR_LAT, tlon, tlat)
+        flight = dist / SPEED_SRBM
+        launch = 900 + idx * 60 + rng.uniform(-30, 30)   # T+15–25 min staggered
+        intercepted = idx in {2, 3, 5}   # 3 of 6 fleet rounds intercepted
+        missiles.append({
+            "src_lon": BUSHEHR_LON, "src_lat": BUSHEHR_LAT,
+            "tgt_lon": tlon, "tgt_lat": tlat,
+            "launch_s": launch, "flight_s": flight, "warhead_kg": 450,
+            "label": f"Khalij Fars #{idx+1} → {tlbl}",
+            "style": "khalij_fars_track" if not intercepted else "ballistic_intercept_track",
+            "intercepted": intercepted, "is_oil": False,
+            "impact_label": tlbl,
+        })
+    # Fateh-313 SRBM (6 rounds) — oil terminal, 450 kg, from Shiraz
+    for idx, (tlon, tlat, tlbl, oil) in enumerate(OIL_TARGETS[:3]):
+        dist = haversine_km(SHIRAZ_LON, SHIRAZ_LAT, tlon, tlat)
+        flight = dist / SPEED_SRBM
+        launch = 960 + idx * 90 + rng.uniform(-20, 20)   # T+16–22 min
+        intercepted = idx == 1   # 1 of 3 intercepted
+        missiles.append({
+            "src_lon": SHIRAZ_LON, "src_lat": SHIRAZ_LAT,
+            "tgt_lon": tlon, "tgt_lat": tlat,
+            "launch_s": launch, "flight_s": flight, "warhead_kg": 450,
+            "label": f"Fateh-313 #{idx+1} → {tlbl}",
+            "style": "fateh_track" if not intercepted else "ballistic_intercept_track",
+            "intercepted": intercepted, "is_oil": oil,
+            "impact_label": tlbl,
+        })
+    # Zolfaghar SRBM (4 rounds) — storage tanks, 450 kg, from Bushehr
+    for idx, (tlon, tlat, tlbl, oil) in enumerate(OIL_TARGETS):
+        dist = haversine_km(BUSHEHR_LON, BUSHEHR_LAT, tlon, tlat)
+        flight = dist / SPEED_SRBM
+        launch = 1020 + idx * 75 + rng.uniform(-20, 20)  # T+17–22 min
+        intercepted = idx == 3   # 1 of 4 intercepted
+        missiles.append({
+            "src_lon": BUSHEHR_LON, "src_lat": BUSHEHR_LAT,
+            "tgt_lon": tlon, "tgt_lat": tlat,
+            "launch_s": launch, "flight_s": flight, "warhead_kg": 450,
+            "label": f"Zolfaghar #{idx+1} → {tlbl}",
+            "style": "zolfaghar_track" if not intercepted else "ballistic_intercept_track",
+            "intercepted": intercepted, "is_oil": oil,
+            "impact_label": tlbl,
+        })
+    # Emad MRBM (4 rounds) — mixed fleet + infrastructure, 750 kg, from Bandar Abbas
+    emad_targets = [
+        (LHA_LON, LHA_LAT - 0.008, "USS Tripoli — Portside Hull"),
+        (LHA_LON + 0.006, LHA_LAT + 0.005, "USS Tripoli — Stern"),
+        (50.328, 29.246, "Kharg Manifold Complex"),
+        (50.322, 29.253, "Kharg Airstrip Terminal"),
+    ]
+    for idx, (tlon, tlat, tlbl) in enumerate(emad_targets):
+        dist = haversine_km(BANDAR_LON, BANDAR_LAT, tlon, tlat)
+        flight = dist / SPEED_MRBM
+        launch = 1080 + idx * 120 + rng.uniform(-30, 30)  # T+18–26 min
+        intercepted = idx in {0, 2}   # 2 of 4 intercepted
+        missiles.append({
+            "src_lon": BANDAR_LON, "src_lat": BANDAR_LAT,
+            "tgt_lon": tlon, "tgt_lat": tlat,
+            "launch_s": launch, "flight_s": flight, "warhead_kg": 750,
+            "label": f"Emad MRBM #{idx+1} → {tlbl}",
+            "style": "emad_track" if not intercepted else "ballistic_intercept_track",
+            "intercepted": intercepted, "is_oil": "Kharg" in tlbl,
+            "impact_label": tlbl,
+        })
+
+    # ── Build KML ─────────────────────────────────────────────────────────────
+    kml_parts = [f"""<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"
+     xmlns:gx="http://www.google.com/kml/ext/2.2">
+<Document>
+  <name>Kharg Island — Iranian Ballistic Missile Strike</name>
+  <description>22 Iranian ballistic missiles targeting US amphibious assault fleet and Kharg Island oil infrastructure. Blast-radius polygons show structural-kill (50–65m, red), significant-damage (150–185m, orange), and overpressure zones (300–380m, yellow). Secondary oil fires modeled at infrastructure hits.</description>
+  <open>1</open>
+  <LookAt>
+    <longitude>50.33</longitude><latitude>29.10</latitude>
+    <altitude>0</altitude><range>120000</range><tilt>45</tilt><heading>0</heading>
+    <altitudeMode>relativeToGround</altitudeMode>
+  </LookAt>
+
+  <!-- Missile track styles -->
+  <Style id="khalij_fars_track">
+    <LineStyle><color>ff0000ff</color><width>2</width></LineStyle>
+    <IconStyle><color>ff0000ff</color><scale>0.8</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/shapes/target.png</href></Icon>
+    </IconStyle>
+  </Style>
+  <Style id="fateh_track">
+    <LineStyle><color>ff0044ff</color><width>2</width></LineStyle>
+    <IconStyle><color>ff0044ff</color><scale>0.8</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/shapes/target.png</href></Icon>
+    </IconStyle>
+  </Style>
+  <Style id="zolfaghar_track">
+    <LineStyle><color>ff0088ff</color><width>2</width></LineStyle>
+    <IconStyle><color>ff0088ff</color><scale>0.8</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/shapes/target.png</href></Icon>
+    </IconStyle>
+  </Style>
+  <Style id="emad_track">
+    <LineStyle><color>ff00aaff</color><width>3</width></LineStyle>
+    <IconStyle><color>ff00aaff</color><scale>1.0</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/shapes/target.png</href></Icon>
+    </IconStyle>
+  </Style>
+  <Style id="ballistic_intercept_track">
+    <LineStyle><color>8800ff00</color><width>1</width></LineStyle>
+    <IconStyle><color>8800ff00</color><scale>0.5</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/shapes/placemark_square.png</href></Icon>
+    </IconStyle>
+  </Style>
+  <!-- Blast ring styles (AABBGGRR) -->
+  <Style id="blast_impact">
+    <IconStyle><color>ff0000ff</color><scale>1.2</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/shapes/target.png</href></Icon>
+    </IconStyle>
+    <LabelStyle><color>ff0000ff</color><scale>0.8</scale></LabelStyle>
+  </Style>
+  <Style id="blast_inner">
+    <!-- Structural kill: red fill, red outline -->
+    <LineStyle><color>ff0000ff</color><width>2</width></LineStyle>
+    <PolyStyle><color>660000ff</color><fill>1</fill><outline>1</outline></PolyStyle>
+  </Style>
+  <Style id="blast_mid">
+    <!-- Significant damage: orange outline only -->
+    <LineStyle><color>ff0066ff</color><width>2</width></LineStyle>
+    <PolyStyle><color>220066ff</color><fill>1</fill><outline>1</outline></PolyStyle>
+  </Style>
+  <Style id="blast_outer">
+    <!-- Overpressure: yellow outline only -->
+    <LineStyle><color>ff00ccff</color><width>1</width></LineStyle>
+    <PolyStyle><color>1100ccff</color><fill>1</fill><outline>1</outline></PolyStyle>
+  </Style>
+  <Style id="blast_fire">
+    <!-- Secondary oil fire: translucent red-orange fill -->
+    <LineStyle><color>aa0055ff</color><width>1</width></LineStyle>
+    <PolyStyle><color>550055ff</color><fill>1</fill><outline>1</outline></PolyStyle>
+  </Style>
+  <!-- Fleet marker styles -->
+  <Style id="us_fleet_marker">
+    <IconStyle><color>ff00ff00</color><scale>0.8</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/grn-stars.png</href></Icon>
+    </IconStyle>
+    <LabelStyle><color>ff00ff00</color><scale>0.7</scale></LabelStyle>
+  </Style>
+  <Style id="iran_site_kharg_marker">
+    <IconStyle><color>ff0000ff</color><scale>0.7</scale>
+      <Icon><href>http://maps.google.com/mapfiles/kml/paddle/red-stars.png</href></Icon>
+    </IconStyle>
+    <LabelStyle><color>ff0000ff</color><scale>0.7</scale></LabelStyle>
+  </Style>
+"""]
+
+    # ── Launch sites ──────────────────────────────────────────────────────────
+    kml_parts.append("  <Folder><name>Iranian Launch Sites</name><visibility>1</visibility>")
+    for slon, slat, sname in [
+        (BUSHEHR_LON, BUSHEHR_LAT, "Bushehr AB — Khalij Fars / Zolfaghar"),
+        (SHIRAZ_LON,  SHIRAZ_LAT,  "Shiraz Missile Brigade — Fateh-313"),
+        (BANDAR_LON,  BANDAR_LAT,  "Bandar Abbas — Emad MRBM Battery"),
+    ]:
+        kml_parts.append(
+            f'  <Placemark><name>{sname}</name><styleUrl>#iran_site_kharg_marker</styleUrl>'
+            f'<Point><coordinates>{slon:.6f},{slat:.6f},0</coordinates></Point></Placemark>')
+    kml_parts.append("  </Folder>")
+
+    # ── US fleet markers ──────────────────────────────────────────────────────
+    kml_parts.append("  <Folder><name>US Amphibious Fleet</name><visibility>1</visibility>")
+    for flon, flat, fname in [
+        (LHA_LON,  LHA_LAT,  "USS Tripoli (LHA-7)"),
+        (DDG_LON,  DDG_LAT,  "DDG Escort"),
+        (LPD1_LON, LPD1_LAT, "LPD-30"),
+        (LPD2_LON, LPD2_LAT, "LPD-29"),
+    ]:
+        kml_parts.append(
+            f'  <Placemark><name>{fname}</name><styleUrl>#us_fleet_marker</styleUrl>'
+            f'<Point><coordinates>{flon:.6f},{flat:.6f},0</coordinates></Point></Placemark>')
+    kml_parts.append("  </Folder>")
+
+    # ── Missile trajectories ───────────────────────────────────────────────────
+    kml_parts.append("  <Folder><name>Ballistic Missile Trajectories</name><visibility>1</visibility>")
+    for m in missiles:
+        kml_parts.append(_ballistic_arc_kml(
+            m["src_lon"], m["src_lat"], m["tgt_lon"], m["tgt_lat"],
+            m["launch_s"], m["flight_s"], m["style"], m["label"]))
+    kml_parts.append("  </Folder>")
+
+    # ── Blast damage circles (breakthrough hits only) ──────────────────────────
+    kml_parts.append("  <Folder><name>Blast Damage Zones</name><visibility>1</visibility>")
+    n_hits = 0
+    for m in missiles:
+        if not m["intercepted"]:
+            impact_t = _ts(m["launch_s"] + m["flight_s"])
+            kml_parts.append(_blast_rings_kml(
+                m["tgt_lon"], m["tgt_lat"], m["warhead_kg"],
+                m["impact_label"], impact_t, m["is_oil"]))
+            n_hits += 1
+    kml_parts.append("  </Folder>")
+
+    # ── Summary description folder ─────────────────────────────────────────────
+    n_intercepted_count = sum(1 for m in missiles if m["intercepted"])
+    kml_parts.append(
+        f'  <Folder><name>Scenario Summary</name><visibility>0</visibility>'
+        f'<description><![CDATA[<b>Kharg Island Ballistic Strike</b><br/>'
+        f'22 Iranian ballistic missiles launched T+15–26 min into USMC assault.<br/>'
+        f'<b>{n_intercepted_count}</b> intercepted (DDG SM-6 + Tripoli SeaRAM).<br/>'
+        f'<b>{n_hits}</b> hits: {sum(1 for m in missiles if not m["intercepted"] and not m["is_oil"])} fleet '
+        f'+ {sum(1 for m in missiles if not m["intercepted"] and m["is_oil"])} oil infrastructure.<br/>'
+        f'Blast rings: red=structural kill, orange=significant damage, yellow=overpressure.<br/>'
+        f'Orange fill = secondary oil fire (r≈200m).]]></description>'
+        f'</Folder>')
+
+    kml_parts.append("</Document>\n</kml>")
+    kml_content = "\n".join(kml_parts)
+
+    # ── Write KMZ ─────────────────────────────────────────────────────────────
+    if out_dir is None:
+        out_dir = _os.path.dirname(_os.path.abspath(__file__))
+    out_path = _os.path.join(out_dir, "kharg_island_ballistic.kmz")
+    with _zf.ZipFile(out_path, "w", _zf.ZIP_DEFLATED) as zf:
+        zf.writestr("doc.kml", kml_content.encode("utf-8"))
+
+    return out_path, len(missiles), n_hits, n_intercepted_count
+
+
+# ============================================================
 # ENTRY POINT
 # ============================================================
 
 def main():
-    base = os.path.dirname(os.path.abspath(__file__))
-    out  = os.path.join(base, "scenarios")
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    out  = os.path.join(base, "output", "scenarios")
     os.makedirs(out, exist_ok=True)
 
     seeds = {"low": 42, "medium": 7, "high": 13, "realistic": 99,
@@ -7688,7 +10321,8 @@ def main():
              "us_win_c2_disrupted": 42,
              "us_win_arsenal_attrition": 42,
              "one_percent_probe": 17,
-             "one_percent_fatah2": 19}
+             "one_percent_fatah2": 19,
+             "ballistic_surge": 55}
     stats = {}
     all_costs = {}
 
@@ -7700,7 +10334,8 @@ def main():
                          "depleted_drone_first", "depleted_coastal", "depleted_israel_split",
                          "us_win_preemption", "us_win_ew_dominance", "us_win_allied_umbrella",
                          "us_win_c2_disrupted", "us_win_arsenal_attrition",
-                         "one_percent_probe", "one_percent_fatah2"):
+                         "one_percent_probe", "one_percent_fatah2",
+                         "ballistic_surge"):
         print(f"  Generating {scenario_key} ...")
         kml_content, legend_states, n_launched, n_intercepted, n_breakthrough, duration_min, costs = \
             generate_scenario(scenario_key, seed=seeds[scenario_key], out_dir=out)
@@ -7737,17 +10372,34 @@ def main():
         print(f"      US casualties: {costs['us_mil_kia']:,} KIA / {costs['us_mil_wia']:,} WIA"
               f" | Civilian collateral: {_fc(costs['collateral_usd'])} / {costs['collateral_kia']:,} KIA")
 
-    master = os.path.join(base, "wargame_master.kml")
+    master = os.path.join(base, "output", "wargame_master.kml")
     with open(master, "w", encoding="utf-8") as fh:
         fh.write(generate_master(stats))
     print(f"  Master -> {master}")
     # ── Summary KMZ ───────────────────────────────────────────────────────────
     # Use the "realistic" scenario legend as the representative legend image
     legend_for_kmz = os.path.join(out, "legend_realistic.png")
-    kmz_path = generate_summary_kmz(stats, all_costs, base, legend_for_kmz)
+    kmz_path = generate_summary_kmz(stats, all_costs, out, legend_for_kmz)
     print(f"  Summary KMZ -> {kmz_path}")
     html_files = generate_html_reports(stats, all_costs, out)
     print(f"  HTML reports -> {len(html_files)} files in {out}/")
+
+    # ── Kharg Island air assault scenarios ─────────────────────────────────────
+    for kharg_variant, kharg_label in (("north_west", "NW airstrip assault"),
+                                        ("south_east",  "SE flanking assault")):
+        print(f"  Generating kharg_island_assault [{kharg_label}] ...")
+        kharg_path, n_waves, troops_wave, total_m, cycle_s = \
+            generate_kharg_assault_kml(out, variant=kharg_variant)
+        print(f"    {kharg_label}: {n_waves} waves × {troops_wave} Marines/wave "
+              f"(~{cycle_s/60:.0f} min cycle) = {total_m:,} Marines total -> {kharg_path}")
+
+    # ── Kharg Island ballistic missile strike scenario ───────────────────────
+    print(f"  Generating kharg_island_ballistic ...")
+    kharg_bal_path, n_bal_missiles, n_bal_hits, n_bal_int = \
+        generate_kharg_ballistic_kml(out)
+    print(f"    Ballistic strike: {n_bal_missiles} missiles | {n_bal_int} intercepted "
+          f"| {n_bal_hits} hits (fleet + oil infrastructure) -> {kharg_bal_path}")
+
     print("Done.")
 
 
